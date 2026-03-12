@@ -1,0 +1,21 @@
+[package]
+name = "rotiv-cli"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+
+[[bin]]
+name = "rotiv"
+path = "src/main.rs"
+
+[dependencies]
+clap = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+anyhow = { workspace = true }
+colored = "2"
+
+[dependencies.rotiv-core]
+path = "../rotiv-core"

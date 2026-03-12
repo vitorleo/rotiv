@@ -1,0 +1,14 @@
+{
+  "name": "rotiv",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "typecheck": "pnpm -r typecheck",
+    "build": "pnpm -r build",
+    "test": "pnpm -r test"
+  },
+  "engines": {
+    "node": ">=22",
+    "pnpm": ">=10"
+  }
+}

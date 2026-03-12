@@ -1,0 +1,17 @@
+{
+  "name": "{{project_name}}",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "rotiv dev",
+    "build": "rotiv build",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@rotiv/sdk": "^0.1.0"
+  },
+  "devDependencies": {
+    "@rotiv/types": "^0.1.0",
+    "typescript": "^5.0.0"
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(find c:UsersVitorDocumentscodebasekova -type f -name *.toml -o -name *.json -o -name *.md)",
+      "Bash(rustc --version)",
+      "Bash(cargo --version)",
+      "Bash(pnpm --version)",
+      "Bash(npm --version)",
+      "Bash(cargo search:*)",
+      "Bash(python3 -c \"import sys,json; data=json.load\\(sys.stdin\\); print\\(data[0][''''text'''']\\)\")",
+      "Bash(python3 -c \":*)",
+      "Read(//mnt/c/Users/Vitor/Documents/**)",
+      "Bash(sccache --version)",
+      "Bash(echo \"pnpm exit: $?\")",
+      "Bash(cargo check:*)",
+      "Bash(cargo test:*)"
+    ],
+    "additionalDirectories": [
+      "C:\\Users\\Vitor\\.claude\\plans",
+      "c:\\Users\\Vitor\\Documents\\codebase"
+    ]
+  }
+}

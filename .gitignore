@@ -1,0 +1,23 @@
+# Rust
+/target/
+Cargo.lock
+
+# Node
+node_modules/
+dist/
+*.tsbuildinfo
+
+# sccache
+.sccache/
+
+# Editor
+.vscode/
+.idea/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Rotiv generated projects (during testing)
+/test-*/

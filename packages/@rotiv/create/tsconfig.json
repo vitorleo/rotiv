@@ -1,0 +1,11 @@
+{
+  "extends": "../../../tsconfig.base.json",
+  "compilerOptions": {
+    "outDir": "dist",
+    "paths": {
+      "@rotiv/types": ["../types/src/index.ts"],
+      "@rotiv/spec": ["../spec/src/index.ts"]
+    }
+  },
+  "include": ["src/**/*", "../types/src/**/*", "../spec/src/**/*"]
+}

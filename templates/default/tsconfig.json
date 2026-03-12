@@ -1,0 +1,10 @@
+{
+  "extends": "@rotiv/types/tsconfig.base.json",
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    "outDir": "dist",
+    "rootDir": "."
+  },
+  "include": ["app/**/*"],
+  "exclude": ["node_modules", "dist"]
+}

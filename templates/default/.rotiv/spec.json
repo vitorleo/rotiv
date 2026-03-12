@@ -1,0 +1,17 @@
+{
+  "$schema": "https://rotiv.dev/spec/v1",
+  "version": "1",
+  "framework_version": "0.1.0",
+  "project": {
+    "name": "{{project_name}}",
+    "created_at": "{{created_at}}"
+  },
+  "routes": [],
+  "models": [],
+  "modules": [],
+  "conventions": {
+    "routes_dir": "app/routes",
+    "models_dir": "app/models",
+    "components_dir": "app/components"
+  }
+}

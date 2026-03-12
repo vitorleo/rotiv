@@ -1,0 +1,87 @@
+import type { RotivSpec } from "@rotiv/types";
+
+export type { RotivSpec };
+
+/**
+ * JSON Schema draft-07 definition for `.rotiv/spec.json`.
+ * This is also emitted as `spec.schema.json` for IDE validation.
+ */
+export const SPEC_JSON_SCHEMA = {
+  $schema: "http://json-schema.org/draft-07/schema#",
+  $id: "https://rotiv.dev/spec/v1",
+  title: "RotivSpec",
+  description: "The .rotiv/spec.json project specification file",
+  type: "object",
+  required: ["version", "framework_version", "project", "routes", "models", "modules"],
+  additionalProperties: false,
+  properties: {
+    $schema: { type: "string" },
+    version: {
+      type: "string",
+      enum: ["1"],
+      description: "Spec format version",
+    },
+    framework_version: {
+      type: "string",
+      description: "Rotiv framework version used to create this project",
+    },
+    project: {
+      type: "object",
+      required: ["name", "created_at"],
+      additionalProperties: false,
+      properties: {
+        name: { type: "string", minLength: 1 },
+        created_at: { type: "string", format: "date-time" },
+      },
+    },
+    routes: {
+      type: "array",
+      items: {
+        type: "object",
+        required: ["path", "file"],
+        additionalProperties: false,
+        properties: {
+          path: { type: "string" },
+          file: { type: "string" },
+          methods: {
+            type: "array",
+            items: { type: "string", enum: ["GET", "POST", "PUT", "PATCH", "DELETE"] },
+          },
+        },
+      },
+    },
+    models: {
+      type: "array",
+      items: {
+        type: "object",
+        required: ["name", "file"],
+        additionalProperties: false,
+        properties: {
+          name: { type: "string" },
+          file: { type: "string" },
+        },
+      },
+    },
+    modules: {
+      type: "array",
+      items: {
+        type: "object",
+        required: ["name", "version"],
+        additionalProperties: false,
+        properties: {
+          name: { type: "string" },
+          version: { type: "string" },
+        },
+      },
+    },
+    conventions: {
+      type: "object",
+      additionalProperties: false,
+      properties: {
+        routes_dir: { type: "string" },
+        models_dir: { type: "string" },
+        components_dir: { type: "string" },
+      },
+    },
+  },
+} as const;
