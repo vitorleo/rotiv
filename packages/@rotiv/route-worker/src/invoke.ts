@@ -2,6 +2,7 @@ import { pathToFileURL } from "node:url";
 import { toRotivError } from "./errors.js";
 import { renderToString, wrapHtml } from "./render.js";
 import { transformAndCache } from "./transform.js";
+import { getDb } from "./db.js";
 
 export interface InvokeRequest {
   route_file: string;
@@ -136,5 +137,6 @@ function buildContext(req: InvokeRequest): unknown {
       headers: req.headers,
       body: req.body,
     }),
+    db: getDb(),
   };
 }

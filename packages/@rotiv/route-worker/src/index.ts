@@ -13,6 +13,7 @@
 import express from "express";
 import { invokeRoute } from "./invoke.js";
 import { toRotivError } from "./errors.js";
+import { initDb } from "./db.js";
 
 const PORT = parseInt(process.env["ROTIV_WORKER_PORT"] ?? "3001", 10);
 
@@ -62,6 +63,9 @@ app.post("/_rotiv/invoke", async (req, res) => {
     res.status(500).json({ error: rotivErr });
   }
 });
+
+const projectDir = process.env["ROTIV_PROJECT_DIR"] ?? process.cwd();
+await initDb(projectDir);
 
 app.listen(PORT, "127.0.0.1", () => {
   console.log(`[route-worker] listening on port ${PORT}`);

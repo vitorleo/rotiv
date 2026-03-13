@@ -10,6 +10,7 @@ use crate::output::{human, json, OutputMode};
 const SPEC_JSON: &str = include_str!("../../../../templates/default/.rotiv/spec.json");
 const CONTEXT_MD: &str = include_str!("../../../../templates/default/.rotiv/context.md");
 const ROUTES_INDEX_TSX: &str = include_str!("../../../../templates/default/app/routes/index.tsx");
+const MODEL_USER_TS: &str = include_str!("../../../../templates/default/app/models/user.ts");
 const PACKAGE_JSON: &str = include_str!("../../../../templates/default/package.json");
 const TSCONFIG_JSON: &str = include_str!("../../../../templates/default/tsconfig.json");
 const README_MD: &str = include_str!("../../../../templates/default/README.md");
@@ -60,8 +61,8 @@ pub fn run(name: &str, mode: OutputMode) -> Result<(), CliError> {
     std::fs::create_dir_all(&routes_dir)?;
     std::fs::create_dir_all(&models_dir)?;
 
-    // Write .gitkeep for models dir
-    std::fs::write(models_dir.join(".gitkeep"), "")?;
+    // Write example model
+    write_template(&models_dir.join("user.ts"), MODEL_USER_TS, name, &created_at)?;
 
     // Write templated files
     write_template(&rotiv_dir.join("spec.json"), SPEC_JSON, name, &created_at)?;

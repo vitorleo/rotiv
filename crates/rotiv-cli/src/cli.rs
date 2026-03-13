@@ -38,4 +38,13 @@ pub enum Commands {
         #[arg(long)]
         minify: bool,
     },
+    /// Run database migrations (generate, apply, or check)
+    Migrate {
+        /// Generate migration files without applying them
+        #[arg(long)]
+        generate_only: bool,
+        /// Check for pending migrations without applying
+        #[arg(long)]
+        check: bool,
+    },
 }

@@ -1,3 +1,4 @@
 packages:
   - "packages/@rotiv/*"
   - "e2e-test-phase3"
+  - "e2e-test-phase4"

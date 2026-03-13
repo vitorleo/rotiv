@@ -1,4 +1,5 @@
 pub mod error;
+pub mod models;
 pub mod project;
 pub mod proxy;
 pub mod router;
@@ -7,6 +8,7 @@ pub mod watcher;
 pub mod worker;
 
 pub use error::RotivError;
+pub use models::{discover_models, ModelEntry};
 pub use project::find_project_root;
 pub use proxy::{InvokeRequest, InvokeResponse, invoke_route};
 pub use router::{RouteEntry, RouteRegistry, SharedRegistry, new_shared_registry};

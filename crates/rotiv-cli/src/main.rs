@@ -20,6 +20,9 @@ fn main() {
         Commands::Info => commands::info::run(mode),
         Commands::Dev { port, host } => commands::dev::run(*port, host, mode),
         Commands::Build { out, minify } => commands::build::run(out.clone(), *minify, mode),
+        Commands::Migrate { generate_only, check } => {
+            commands::migrate::run(*generate_only, *check, mode)
+        }
     };
 
     if let Err(e) = result {

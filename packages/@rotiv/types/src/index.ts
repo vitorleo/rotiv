@@ -1,4 +1,5 @@
 export type { ProjectConfig } from "./config.js";
+export type { RotivDb } from "./db.js";
 export type {
   RotivSpec,
   SpecVersion,

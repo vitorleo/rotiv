@@ -17,5 +17,8 @@ notify = { workspace = true }
 notify-debouncer-mini = { workspace = true }
 reqwest = { workspace = true }
 
+[dependencies.rotiv-orm]
+path = "../rotiv-orm"
+
 [dev-dependencies]
 tempfile = "3"

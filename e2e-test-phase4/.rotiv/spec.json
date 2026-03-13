@@ -1,0 +1,10 @@
+{
+  "version": "1",
+  "project_name": "e2e-test-phase4",
+  "created_at": "2026-03-13T00:00:00Z",
+  "conventions": {
+    "routes_dir": "app/routes",
+    "models_dir": "app/models",
+    "output_dir": "dist"
+  }
+}

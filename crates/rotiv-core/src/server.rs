@@ -11,7 +11,10 @@ use axum::{
     response::{IntoResponse, Response},
     routing::any,
 };
+use rotiv_orm::auto_migrate;
+
 use crate::error::RotivError;
+use crate::models::discover_models;
 use crate::proxy::{InvokeRequest, invoke_route};
 use crate::router::{SharedRegistry, new_shared_registry};
 use crate::watcher::{FileWatcher, WatchEvent};
@@ -79,6 +82,41 @@ impl DevServer {
             println!(r#"{{"event":"worker_ready","worker_port":{worker_port}}}"#);
         } else {
             println!("  worker    ready");
+        }
+
+        // Auto-migrate if app/models/ exists (non-fatal — dev server continues on error)
+        let models_dir = self.config.project_dir.join("app").join("models");
+        if models_dir.exists() {
+            match auto_migrate(&self.config.project_dir) {
+                Ok(result) if result.migrations_applied > 0 => {
+                    if self.config.json_output {
+                        let n = result.migrations_applied;
+                        println!(r#"{{"event":"migrated","migrations_applied":{n}}}"#);
+                    } else {
+                        println!("  migrate   {} migration(s) applied", result.migrations_applied);
+                    }
+                }
+                Ok(_) => {
+                    if !self.config.json_output {
+                        println!("  migrate   up to date");
+                    }
+                }
+                Err(e) => {
+                    eprintln!("  [migrate] warning: {e}");
+                }
+            }
+        }
+
+        // Print model count (non-fatal if models dir doesn't exist)
+        if let Ok(models) = discover_models(&self.config.project_dir) {
+            if !models.is_empty() {
+                if self.config.json_output {
+                    let count = models.len();
+                    println!(r#"{{"event":"models_loaded","count":{count}}}"#);
+                } else {
+                    println!("  models    {} model(s) found", models.len());
+                }
+            }
         }
 
         let worker = Arc::new(tokio::sync::Mutex::new(worker));

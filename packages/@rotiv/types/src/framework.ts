@@ -1,4 +1,5 @@
 import type { ProjectConfig } from "./config.js";
+import type { RotivDb } from "./db.js";
 
 export type { ProjectConfig };
 
@@ -17,6 +18,7 @@ export interface RequestContext {
  */
 export interface LoaderContext extends RequestContext {
   readonly method: "GET";
+  readonly db: RotivDb;
 }
 
 /**
@@ -24,6 +26,7 @@ export interface LoaderContext extends RequestContext {
  */
 export interface ActionContext extends RequestContext {
   readonly method: "POST" | "PUT" | "PATCH" | "DELETE";
+  readonly db: RotivDb;
   json(): Promise<unknown>;
   formData(): Promise<FormData>;
 }

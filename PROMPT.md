@@ -203,11 +203,11 @@ Phase 7: Polish & Distribution
 ## YOUR TASK
 
 1. Read this specification carefully.
-2. Produce a detailed implementation plan for Phase 1, breaking it
+2. Produce a detailed implementation plan for Phase 4, breaking it
    into specific tasks with file paths and code structure decisions.
 3. Identify any design decisions that need resolution before coding
    (list them as open questions with your recommended answers).
-4. Begin implementing Phase 1, starting with the monorepo setup.
+4. Begin implementing Phase 4, starting with the monorepo setup.
 5. After each significant milestone, run tests and validate that
    the foundation is solid before proceeding.
 6. Document every architectural decision in a DECISIONS.md file

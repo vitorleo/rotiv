@@ -23,3 +23,6 @@ path = "../rotiv-core"
 
 [dependencies.rotiv-compiler]
 path = "../rotiv-compiler"
+
+[dependencies.rotiv-orm]
+path = "../rotiv-orm"

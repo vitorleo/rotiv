@@ -2,7 +2,7 @@ import { transform } from "@swc/core";
 import { createHash } from "node:crypto";
 import { readFile, writeFile, mkdir, stat } from "node:fs/promises";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { join, resolve, dirname } from "node:path";
 import { createRequire } from "node:module";
 import { pathToFileURL } from "node:url";
 
@@ -61,45 +61,70 @@ export async function transformAndCache(filePath: string): Promise<string> {
 }
 
 /**
- * Replace every `from "some-package"` in compiled output with the resolved
- * absolute `file://` URL. Only bare specifiers (no `.`, `/`, or `file:` prefix)
- * are rewritten.
+ * Replace every import specifier in compiled output with an absolute `file://`
+ * URL so that cached `.mjs` files in the OS temp dir can resolve all imports.
  *
- * Resolution order per specifier:
- *   1. import.meta.resolve (worker package's own node_modules)
- *   2. require.resolve from the route file's directory (project node_modules)
+ * Handles two specifier kinds:
+ *   - Bare specifiers (e.g. `@rotiv/sdk`, `express`) — resolved via
+ *     import.meta.resolve (worker node_modules) then createRequire (project).
+ *   - Relative specifiers (e.g. `../models/user.js`) — resolved relative to
+ *     the original route file directory.
  */
 async function rewriteImports(code: string, routeFilePath: string): Promise<string> {
-  // Match: from "package" or from 'package' (bare specifiers only)
-  const BARE_IMPORT_RE = /\bfrom\s+(["'])([^./"'][^"']*)\1/g;
+  // Match all import specifiers: from "..." or from '...'
+  const IMPORT_RE = /\bfrom\s+(["'])([^"']+)\1/g;
 
   // require() resolver rooted at the route file — finds project packages
   const requireFromProject = createRequire(routeFilePath);
+  const routeDir = dirname(routeFilePath);
 
   const seen = new Map<string, string>();
 
-  for (const match of code.matchAll(BARE_IMPORT_RE)) {
+  for (const match of code.matchAll(IMPORT_RE)) {
     const quote = match[1];
     const specifier = match[2];
     if (specifier === undefined || quote === undefined) continue;
     if (seen.has(specifier)) continue;
+    if (specifier.startsWith("file:")) continue; // already absolute
 
     let resolved: string | undefined;
 
-    // 1. Try worker's own node_modules (e.g. @rotiv/jsx-runtime)
-    try {
-      resolved = import.meta.resolve(specifier);
-    } catch {
-      // not in worker node_modules
-    }
+    if (specifier.startsWith(".")) {
+      // Relative import — resolve from the original route file's directory.
+      // Strip .js extension to find the actual .ts source if needed.
+      const tsPath = resolve(routeDir, specifier.replace(/\.js$/, ".ts"));
+      const jsPath = resolve(routeDir, specifier);
 
-    // 2. Fall back to project node_modules (e.g. @rotiv/sdk)
-    if (!resolved) {
+      // If a .ts source exists, transform+cache it too so Node can import it.
       try {
-        const cjsPath = requireFromProject.resolve(specifier);
-        resolved = pathToFileURL(cjsPath).href;
+        await stat(tsPath);
+        const cachedPath = await transformAndCache(tsPath);
+        resolved = pathToFileURL(cachedPath).href;
       } catch {
-        // unresolvable — leave as-is
+        try {
+          await stat(jsPath);
+          resolved = pathToFileURL(jsPath).href;
+        } catch {
+          // leave as-is
+        }
+      }
+    } else if (!specifier.startsWith("/")) {
+      // Bare specifier (package name)
+      // 1. Try worker's own node_modules (e.g. @rotiv/jsx-runtime)
+      try {
+        resolved = import.meta.resolve(specifier);
+      } catch {
+        // not in worker node_modules
+      }
+
+      // 2. Fall back to project node_modules (e.g. @rotiv/sdk)
+      if (!resolved) {
+        try {
+          const cjsPath = requireFromProject.resolve(specifier);
+          resolved = pathToFileURL(cjsPath).href;
+        } catch {
+          // unresolvable — leave as-is
+        }
       }
     }
 
@@ -110,7 +135,6 @@ async function rewriteImports(code: string, routeFilePath: string): Promise<stri
 
   let patched = code;
   for (const [specifier, resolved] of seen) {
-    // Replace all occurrences of the bare specifier
     patched = patched.replaceAll(`"${specifier}"`, `"${resolved}"`);
     patched = patched.replaceAll(`'${specifier}'`, `'${resolved}'`);
   }
