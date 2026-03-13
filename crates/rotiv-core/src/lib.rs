@@ -1,6 +1,16 @@
 pub mod error;
+pub mod proxy;
+pub mod router;
+pub mod server;
+pub mod watcher;
+pub mod worker;
 
 pub use error::RotivError;
+pub use proxy::{InvokeRequest, InvokeResponse, invoke_route};
+pub use router::{RouteEntry, RouteRegistry, SharedRegistry, new_shared_registry};
+pub use server::{DevServer, DevServerConfig};
+pub use watcher::{FileWatcher, WatchEvent};
+pub use worker::{RouteWorker, resolve_worker_path};
 
 #[cfg(test)]
 mod tests {

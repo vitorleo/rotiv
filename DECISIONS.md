@@ -57,3 +57,43 @@
 **Rationale:** The `@rotiv/spec` package exports both TypeScript types and the JSON Schema. This enables IDE validation via `$schema` and programmatic validation via the `validateSpec` function.
 
 **Alternative considered:** TOML for the spec file. Rejected — JSON has better agent tooling support and requires no extra Rust dependency.
+
+---
+
+## D7: Subprocess Architecture Instead of napi-rs
+
+**Decision:** `rotiv dev` uses a subprocess architecture: Rust axum server (port 3000) + Node.js route-worker (port 3001, internal). On each HTTP request, axum resolves the route file, POSTs to `localhost:3001/_rotiv/invoke`, and forwards the response.
+
+**Rationale:** napi-rs requires node-gyp, a C++ toolchain, and cross-compilation config. On Windows this is a multi-hour debugging risk with no user-visible benefit during Phase 2. The subprocess approach has a clean IPC contract (JSON over HTTP) that is easy to test in isolation.
+
+**Alternative considered:** napi-rs native bindings. Rejected — build complexity is unacceptable for Phase 2. Phase 3 will use the SWC compiler crate natively without Node.js at all.
+
+---
+
+## D8: tsx as the Phase 2 TypeScript Executor
+
+**Decision:** The route-worker uses `tsx` (npm package) to `import()` `.tsx` route files without a compile step.
+
+**Rationale:** Single dependency, handles TypeScript/JSX resolution, the de-facto standard in 2025 for on-the-fly TS execution. Cache-busts each import with `?t=Date.now()` via `pathToFileURL` so edits are picked up within a session.
+
+**Alternative considered:** ts-node. Rejected — tsx is faster and has better ESM support. SWC (Phase 3) will replace tsx entirely.
+
+---
+
+## D9: notify with Polling Fallback
+
+**Decision:** `FileWatcher` uses `notify_debouncer_mini` (recommended watcher) as primary and `notify::PollWatcher` (500ms interval) as fallback. Polling is the default on Windows (`cfg!(target_os = "windows")`) and can be forced with `ROTIV_FORCE_POLL=1`.
+
+**Rationale:** WSL2 inotify only fires for writes done from inside WSL2. VS Code writes from the Windows side → inotify never fires. The watcher loop uses `try_recv()` + `tokio::time::sleep()` instead of `recv_timeout()` to avoid blocking the single-threaded tokio runtime.
+
+**Alternative considered:** Always poll. Rejected — native inotify is more responsive when available (e.g., pure Linux). Always recommend watcher. Rejected — WSL2 is a first-class dev environment and silent watch failures are unacceptable.
+
+---
+
+## D10: Phase 2 Routes Return HTML Strings, Not JSX
+
+**Decision:** `component()` returns a `string` (not JSX/TSX). The route-worker's `renderToString` shim returns the string directly. JSX syntax will be supported in Phase 3.
+
+**Rationale:** No JSX compiler exists until Phase 3 (SWC). Requiring users to write JSX in Phase 2 would cause runtime errors with no clear error message. String templates are fully functional for demonstrating the framework.
+
+**Alternative considered:** Block rendering until Phase 3. Rejected — `rotiv dev` needs to serve something useful in Phase 2 to validate the full request pipeline.

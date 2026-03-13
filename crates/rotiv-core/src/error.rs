@@ -1,9 +1,9 @@
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
 /// Structured error type shared across all Rotiv crates.
 /// Serializes to JSON for the `--json` output mode.
-#[derive(Debug, Clone, Serialize, Error)]
+#[derive(Debug, Clone, Serialize, Deserialize, Error)]
 #[error("{code}: {message}")]
 pub struct RotivError {
     pub code: String,

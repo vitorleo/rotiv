@@ -18,6 +18,7 @@ fn main() {
     let result = match &cli.command {
         Commands::New { name } => commands::new::run(name, mode),
         Commands::Info => commands::info::run(mode),
+        Commands::Dev { port, host } => commands::dev::run(*port, host, mode),
     };
 
     if let Err(e) = result {

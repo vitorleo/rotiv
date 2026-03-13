@@ -20,5 +20,14 @@ pub enum Commands {
     },
     /// Print framework version and project spec summary
     Info,
-    // Phase 2+: Dev, Build, Deploy, Add, Explain, Validate, Migrate
+    /// Start the development server with file watching
+    Dev {
+        /// Port to listen on
+        #[arg(short, long, default_value = "3000")]
+        port: u16,
+        /// Host to bind to
+        #[arg(long, default_value = "127.0.0.1")]
+        host: String,
+    },
+    // Phase 3+: Build, Deploy, Add, Explain, Validate, Migrate
 }
