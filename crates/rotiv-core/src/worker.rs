@@ -31,12 +31,27 @@ impl RouteWorker {
             return Ok(()); // already running
         }
 
+        // Run from the worker package directory so that `tsx` and
+        // `@rotiv/jsx-runtime` can be resolved from its own node_modules
+        // (the project dir may not have these packages installed).
+        let worker_package_dir = self
+            .worker_path
+            .parent()
+            .and_then(|p| p.parent()) // src/ -> package root
+            .unwrap_or(&self.worker_path);
+
+        // Also expose worker's node_modules via NODE_PATH so that compiled
+        // .mjs files loaded from the OS temp cache can resolve @rotiv/* packages.
+        let node_modules = worker_package_dir.join("node_modules");
+
         let child = tokio::process::Command::new("node")
             .arg("--import")
             .arg("tsx")
             .arg(&self.worker_path)
+            .current_dir(worker_package_dir)
             .env("ROTIV_WORKER_PORT", self.port.to_string())
             .env("ROTIV_PROJECT_DIR", self.project_dir.display().to_string())
+            .env("NODE_PATH", node_modules)
             .stdout(std::process::Stdio::inherit())
             .stderr(std::process::Stdio::inherit())
             .spawn()

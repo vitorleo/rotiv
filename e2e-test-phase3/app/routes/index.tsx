@@ -6,7 +6,7 @@ import { defineRoute } from "@rotiv/sdk";
 export default defineRoute({
   path: "/",
   async loader() {
-    return { message: "Hello from {{project_name}}!" };
+    return { message: "Hello from e2e-test-phase3!" };
   },
   component({ data }) {
     return (

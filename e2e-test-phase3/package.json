@@ -1,5 +1,5 @@
 {
-  "name": "{{project_name}}",
+  "name": "e2e-test-phase3",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -8,12 +8,12 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@rotiv/jsx-runtime": "^0.1.0",
-    "@rotiv/sdk": "^0.1.0",
-    "@rotiv/signals": "^0.1.0"
+    "@rotiv/jsx-runtime": "workspace:*",
+    "@rotiv/sdk": "workspace:*",
+    "@rotiv/signals": "workspace:*"
   },
   "devDependencies": {
-    "@rotiv/types": "^0.1.0",
+    "@rotiv/types": "workspace:*",
     "tsx": "^4.0.0",
     "typescript": "^5.0.0"
   }

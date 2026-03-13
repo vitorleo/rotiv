@@ -1,0 +1,16 @@
+{
+  "name": "@rotiv/signals",
+  "version": "0.1.0",
+  "private": false,
+  "type": "module",
+  "description": "Rotiv signal primitives — SSR-safe in Phase 3, client DOM binding in Phase 4",
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0"
+  }
+}

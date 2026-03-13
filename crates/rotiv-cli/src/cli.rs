@@ -29,5 +29,13 @@ pub enum Commands {
         #[arg(long, default_value = "127.0.0.1")]
         host: String,
     },
-    // Phase 3+: Build, Deploy, Add, Explain, Validate, Migrate
+    /// Compile the project to dist/
+    Build {
+        /// Output directory (defaults to <project>/dist)
+        #[arg(short, long)]
+        out: Option<std::path::PathBuf>,
+        /// Enable minification
+        #[arg(long)]
+        minify: bool,
+    },
 }

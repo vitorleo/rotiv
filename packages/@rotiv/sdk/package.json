@@ -2,6 +2,7 @@
   "name": "@rotiv/sdk",
   "version": "0.1.0",
   "private": false,
+  "type": "module",
   "description": "Rotiv framework SDK — runtime APIs and utilities",
   "main": "./src/index.ts",
   "types": "./src/index.ts",

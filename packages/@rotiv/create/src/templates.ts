@@ -37,6 +37,9 @@ _Describe the architecture and key design decisions._
 
 export const ROUTES_INDEX_TSX_TEMPLATE = `import { defineRoute } from "@rotiv/sdk";
 
+// FRAMEWORK: Component returns JSX, compiled by @swc/core to @rotiv/jsx-runtime
+// calls during \`rotiv dev\`. Rendering is server-side only in Phase 3.
+// Client-side interactivity (signals, DOM binding) arrives in Phase 4.
 export default defineRoute({
   path: "/",
   async loader() {
@@ -63,10 +66,13 @@ export const PACKAGE_JSON_TEMPLATE = `{
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@rotiv/sdk": "^0.1.0"
+    "@rotiv/jsx-runtime": "^0.1.0",
+    "@rotiv/sdk": "^0.1.0",
+    "@rotiv/signals": "^0.1.0"
   },
   "devDependencies": {
     "@rotiv/types": "^0.1.0",
+    "tsx": "^4.0.0",
     "typescript": "^5.0.0"
   }
 }
@@ -76,6 +82,7 @@ export const TSCONFIG_JSON_TEMPLATE = `{
   "extends": "@rotiv/types/tsconfig.base.json",
   "compilerOptions": {
     "jsx": "react-jsx",
+    "jsxImportSource": "@rotiv",
     "outDir": "dist",
     "rootDir": "."
   },

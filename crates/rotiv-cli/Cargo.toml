@@ -20,3 +20,6 @@ colored = "2"
 
 [dependencies.rotiv-core]
 path = "../rotiv-core"
+
+[dependencies.rotiv-compiler]
+path = "../rotiv-compiler"

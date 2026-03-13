@@ -1,11 +1,21 @@
+import { renderToString as jsxRenderToString } from "@rotiv/jsx-runtime";
+import type { VNode } from "@rotiv/jsx-runtime";
+
+function isVNode(value: unknown): value is VNode {
+  return (
+    value !== null &&
+    typeof value === "object" &&
+    "type" in value &&
+    "props" in value &&
+    "key" in value
+  );
+}
+
 /**
- * Phase 2 renderToString shim.
+ * Phase 3 renderToString.
  *
- * Route components must return an HTML string in Phase 2.
- * JSX syntax will be supported in Phase 3 after the Rotiv compiler ships.
- *
- * If the component returns a non-string (e.g., a POJO for an API-only route),
- * it is JSON-serialized.
+ * Dispatches to @rotiv/jsx-runtime for VNode output (JSX components),
+ * with Phase 2 backward compatibility for plain HTML string returns.
  */
 export function renderToString(
   component: ((props: { data: unknown }) => unknown) | undefined,
@@ -13,7 +23,16 @@ export function renderToString(
 ): string {
   if (!component) return "";
   const result = component(props);
+
+  // Phase 3: VNode from @rotiv/jsx-runtime (JSX-compiled component)
+  if (isVNode(result)) {
+    return jsxRenderToString(result);
+  }
+
+  // Phase 2 backward compat: plain HTML string
   if (typeof result === "string") return result;
+
+  // API-only (no component body expected) — should not normally be reached
   return JSON.stringify(result);
 }
 

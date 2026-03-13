@@ -19,6 +19,7 @@ fn main() {
         Commands::New { name } => commands::new::run(name, mode),
         Commands::Info => commands::info::run(mode),
         Commands::Dev { port, host } => commands::dev::run(*port, host, mode),
+        Commands::Build { out, minify } => commands::build::run(out.clone(), *minify, mode),
     };
 
     if let Err(e) = result {

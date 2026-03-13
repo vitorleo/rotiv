@@ -1,10 +1,7 @@
 import { pathToFileURL } from "node:url";
 import { toRotivError } from "./errors.js";
 import { renderToString, wrapHtml } from "./render.js";
-
-function pathToFileUrl(filePath: string): URL {
-  return pathToFileURL(filePath);
-}
+import { transformAndCache } from "./transform.js";
 
 export interface InvokeRequest {
   route_file: string;
@@ -30,9 +27,11 @@ export interface InvokeResponse {
  * if the watcher event fires slightly late.)
  */
 export async function invokeRoute(req: InvokeRequest): Promise<InvokeResponse> {
-  // Convert absolute path to file:// URL (required by Node ESM on Windows)
-  // and cache-bust so edits within a session are picked up without restart.
-  const fileUrl = pathToFileUrl(req.route_file);
+  // Transform TSX → ESM via SWC (handles JSX with @rotiv/jsx-runtime).
+  // The mtime-keyed cache means edits always produce a fresh .mjs file.
+  // Cache-bust the import URL so Node ESM re-evaluates on every request.
+  const cachedPath = await transformAndCache(req.route_file);
+  const fileUrl = pathToFileURL(cachedPath);
   fileUrl.searchParams.set("t", String(Date.now()));
   const moduleUrl = fileUrl.href;
 
