@@ -48,6 +48,8 @@ jobs:
 
       - name: Build release binary
         run: cargo build --release --target ${{ matrix.target }} -p rotiv-cli
+        env:
+          RUSTC_WRAPPER: ""
 
       - name: Rename binary
         shell: bash
