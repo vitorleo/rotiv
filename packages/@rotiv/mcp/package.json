@@ -1,0 +1,17 @@
+{
+  "name": "@rotiv/mcp",
+  "version": "0.1.0",
+  "description": "MCP (Model Context Protocol) server for the Rotiv framework CLI",
+  "type": "module",
+  "main": "dist/server.js",
+  "bin": {
+    "rotiv-mcp": "dist/server.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0"
+  }
+}

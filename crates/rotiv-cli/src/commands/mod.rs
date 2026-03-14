@@ -1,5 +1,6 @@
 pub mod add;
 pub mod build;
+pub mod deploy;
 pub mod context;
 pub mod dev;
 pub mod diff_impact;

@@ -1,0 +1,6 @@
+{
+  "host": "YOUR_SERVER_IP",
+  "user": "root",
+  "remote_path": "/opt/rotiv-apps/myapp",
+  "service_name": "myapp"
+}

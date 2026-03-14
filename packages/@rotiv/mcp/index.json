@@ -1,0 +1,183 @@
+{
+  "schema_version": "1.0",
+  "name": "rotiv",
+  "description": "Rotiv AI-native full-stack framework CLI tools",
+  "tools": [
+    {
+      "name": "rotiv_new",
+      "description": "Create a new Rotiv project with all conventions in place",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Project name (also used as directory name)"
+          }
+        },
+        "required": ["name"]
+      }
+    },
+    {
+      "name": "rotiv_info",
+      "description": "Print framework version and project spec summary",
+      "inputSchema": {
+        "type": "object",
+        "properties": {}
+      }
+    },
+    {
+      "name": "rotiv_add_route",
+      "description": "Scaffold an annotated route file at app/routes/<path>.tsx",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "string",
+            "description": "Route path, e.g. 'users/[id]' or 'products'"
+          }
+        },
+        "required": ["path"]
+      }
+    },
+    {
+      "name": "rotiv_add_model",
+      "description": "Scaffold an annotated model file at app/models/<name>.ts",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Model name in PascalCase, e.g. 'Post' or 'UserProfile'"
+          }
+        },
+        "required": ["name"]
+      }
+    },
+    {
+      "name": "rotiv_add_module",
+      "description": "Install a module (first-party or custom) at app/modules/<name>/",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Module name in lowercase-hyphen format, e.g. 'auth', 'sessions', 'file-uploads'"
+          }
+        },
+        "required": ["name"]
+      }
+    },
+    {
+      "name": "rotiv_spec_sync",
+      "description": "Sync .rotiv/spec.json with current filesystem state (routes, models, modules)",
+      "inputSchema": {
+        "type": "object",
+        "properties": {}
+      }
+    },
+    {
+      "name": "rotiv_validate",
+      "description": "Run static analysis against framework rules, return structured diagnostics",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "fix": {
+            "type": "boolean",
+            "description": "Apply auto-fixes for fixable diagnostics",
+            "default": false
+          }
+        }
+      }
+    },
+    {
+      "name": "rotiv_explain",
+      "description": "Query the built-in knowledge base for a topic",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "topic": {
+            "type": "string",
+            "description": "Topic name: routes, models, loader, action, middleware, signals, migrate, context, modules, deploy"
+          }
+        },
+        "required": ["topic"]
+      }
+    },
+    {
+      "name": "rotiv_context_regen",
+      "description": "Regenerate .rotiv/context.md from current project state",
+      "inputSchema": {
+        "type": "object",
+        "properties": {}
+      }
+    },
+    {
+      "name": "rotiv_diff_impact",
+      "description": "Analyze which routes are affected by changes to a file",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "file": {
+            "type": "string",
+            "description": "File to analyze, e.g. 'app/models/user.ts'"
+          }
+        },
+        "required": ["file"]
+      }
+    },
+    {
+      "name": "rotiv_migrate",
+      "description": "Generate and/or apply database migrations",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "generate_only": {
+            "type": "boolean",
+            "description": "Generate migration files without applying them",
+            "default": false
+          },
+          "check": {
+            "type": "boolean",
+            "description": "Check for pending migrations without applying",
+            "default": false
+          }
+        }
+      }
+    },
+    {
+      "name": "rotiv_deploy",
+      "description": "Deploy the project to a remote server via SSH",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "dry_run": {
+            "type": "boolean",
+            "description": "Print deployment steps without executing them",
+            "default": false
+          },
+          "skip_build": {
+            "type": "boolean",
+            "description": "Skip the build step",
+            "default": false
+          },
+          "host": {
+            "type": "string",
+            "description": "Remote host (overrides .rotiv/deploy.json)"
+          },
+          "user": {
+            "type": "string",
+            "description": "Remote user"
+          },
+          "path": {
+            "type": "string",
+            "description": "Remote path to deploy to"
+          },
+          "service": {
+            "type": "string",
+            "description": "Systemd service name to restart"
+          }
+        }
+      }
+    }
+  ]
+}

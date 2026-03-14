@@ -59,7 +59,7 @@ pub enum Commands {
     },
     /// Query the built-in knowledge base
     Explain {
-        /// Topic name (routes, models, loader, action, middleware, signals, migrate, context)
+        /// Topic name (routes, models, loader, action, middleware, signals, migrate, context, modules, deploy)
         topic: String,
     },
     /// Regenerate .rotiv/context.md from current project state
@@ -68,6 +68,30 @@ pub enum Commands {
     DiffImpact {
         /// File to analyze (e.g. app/models/user.ts)
         file: String,
+    },
+    /// Deploy the project to a remote server via SSH
+    Deploy {
+        /// Remote host (overrides .rotiv/deploy.json)
+        #[arg(long)]
+        host: Option<String>,
+        /// Remote user (default: root)
+        #[arg(long)]
+        user: Option<String>,
+        /// Remote path to deploy to (overrides .rotiv/deploy.json)
+        #[arg(long, name = "path")]
+        remote_path: Option<String>,
+        /// Systemd service name to restart (overrides .rotiv/deploy.json)
+        #[arg(long)]
+        service: Option<String>,
+        /// Create .rotiv/deploy.json config template and exit
+        #[arg(long)]
+        init: bool,
+        /// Print deployment steps without executing them
+        #[arg(long)]
+        dry_run: bool,
+        /// Skip the build step (use existing dist/)
+        #[arg(long)]
+        skip_build: bool,
     },
 }
 

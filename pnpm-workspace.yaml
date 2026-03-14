@@ -4,3 +4,4 @@ packages:
   - "e2e-test-phase4"
   - "e2e-test-phase5"
   - "e2e-test-phase6"
+  - "reference-apps/todo"

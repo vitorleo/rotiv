@@ -33,6 +33,24 @@ fn main() {
         Commands::Explain { topic } => commands::explain::run(topic, mode),
         Commands::ContextRegen => commands::context::run(mode),
         Commands::DiffImpact { file } => commands::diff_impact::run(file, mode),
+        Commands::Deploy {
+            host,
+            user,
+            remote_path,
+            service,
+            init,
+            dry_run,
+            skip_build,
+        } => commands::deploy::run(
+            host.as_deref(),
+            user.as_deref(),
+            remote_path.as_deref(),
+            service.as_deref(),
+            *init,
+            *dry_run,
+            *skip_build,
+            mode,
+        ),
     };
 
     if let Err(e) = result {
