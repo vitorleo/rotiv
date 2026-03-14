@@ -58,6 +58,34 @@ importers:
         specifier: ^5.0.0
         version: 5.9.3
 
+  e2e-test-phase5:
+    dependencies:
+      '@rotiv/jsx-runtime':
+        specifier: workspace:*
+        version: link:../packages/@rotiv/jsx-runtime
+      '@rotiv/orm':
+        specifier: workspace:*
+        version: link:../packages/@rotiv/orm
+      '@rotiv/sdk':
+        specifier: workspace:*
+        version: link:../packages/@rotiv/sdk
+      '@rotiv/signals':
+        specifier: workspace:*
+        version: link:../packages/@rotiv/signals
+    devDependencies:
+      '@rotiv/types':
+        specifier: workspace:*
+        version: link:../packages/@rotiv/types
+      drizzle-kit:
+        specifier: ^0.30.0
+        version: 0.30.6
+      tsx:
+        specifier: ^4.0.0
+        version: 4.21.0
+      typescript:
+        specifier: ^5.0.0
+        version: 5.9.3
+
   packages/@rotiv/build-script:
     dependencies:
       '@swc/core':

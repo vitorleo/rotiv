@@ -1,3 +1,4 @@
+pub mod analysis;
 pub mod error;
 pub mod models;
 pub mod project;
@@ -7,6 +8,7 @@ pub mod server;
 pub mod watcher;
 pub mod worker;
 
+pub use analysis::{Diagnostic, DiagnosticSeverity, apply_fixes, run_diagnostics};
 pub use error::RotivError;
 pub use models::{discover_models, ModelEntry};
 pub use project::find_project_root;

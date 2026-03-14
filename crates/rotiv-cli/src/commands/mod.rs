@@ -1,5 +1,11 @@
+pub mod add;
 pub mod build;
+pub mod context;
 pub mod dev;
+pub mod diff_impact;
+pub mod explain;
 pub mod info;
 pub mod migrate;
 pub mod new;
+pub mod spec_sync;
+pub mod validate;

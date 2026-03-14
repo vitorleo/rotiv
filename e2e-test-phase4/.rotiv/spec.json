@@ -1,10 +1,26 @@
 {
-  "version": "1",
-  "project_name": "e2e-test-phase4",
-  "created_at": "2026-03-13T00:00:00Z",
   "conventions": {
-    "routes_dir": "app/routes",
     "models_dir": "app/models",
-    "output_dir": "dist"
-  }
+    "output_dir": "dist",
+    "routes_dir": "app/routes"
+  },
+  "created_at": "2026-03-13T00:00:00Z",
+  "models": [
+    {
+      "file": "app/models/user.ts",
+      "name": "User",
+      "table": "users"
+    }
+  ],
+  "project_name": "e2e-test-phase4",
+  "routes": [
+    {
+      "file": "app/routes/index.tsx",
+      "has_action": false,
+      "has_component": true,
+      "has_loader": true,
+      "path": "/"
+    }
+  ],
+  "version": "1"
 }

@@ -1,0 +1,50 @@
+{
+  "$schema": "https://rotiv.dev/spec/v1",
+  "conventions": {
+    "components_dir": "app/components",
+    "models_dir": "app/models",
+    "routes_dir": "app/routes"
+  },
+  "framework_version": "0.1.0",
+  "models": [
+    {
+      "file": "app/models/post.ts",
+      "name": "Post",
+      "table": "posts"
+    },
+    {
+      "file": "app/models/user.ts",
+      "name": "User",
+      "table": "users"
+    }
+  ],
+  "modules": [],
+  "project": {
+    "created_at": "2026-03-13T00:00:00Z",
+    "name": "e2e-test-phase5"
+  },
+  "routes": [
+    {
+      "file": "app/routes/index.tsx",
+      "has_action": false,
+      "has_component": true,
+      "has_loader": true,
+      "path": "/"
+    },
+    {
+      "file": "app/routes/products.tsx",
+      "has_action": false,
+      "has_component": true,
+      "has_loader": true,
+      "path": "/products"
+    },
+    {
+      "file": "app/routes/users/[id].tsx",
+      "has_action": false,
+      "has_component": true,
+      "has_loader": true,
+      "path": "/users/:id"
+    }
+  ],
+  "version": "1"
+}

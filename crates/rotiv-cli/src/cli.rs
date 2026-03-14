@@ -1,4 +1,4 @@
-use clap::{Parser, Subcommand};
+use clap::{Parser, Subcommand, Args};
 
 #[derive(Parser)]
 #[command(name = "rotiv", version, about = "Rotiv — AI-native full-stack framework CLI")]
@@ -46,5 +46,47 @@ pub enum Commands {
         /// Check for pending migrations without applying
         #[arg(long)]
         check: bool,
+    },
+    /// Scaffold a new route or model file with annotated comments
+    Add(AddArgs),
+    /// Sync .rotiv/spec.json with current filesystem state
+    SpecSync,
+    /// Run static analysis against framework rules
+    Validate {
+        /// Apply auto-fixes for fixable diagnostics
+        #[arg(long)]
+        fix: bool,
+    },
+    /// Query the built-in knowledge base
+    Explain {
+        /// Topic name (routes, models, loader, action, middleware, signals, migrate, context)
+        topic: String,
+    },
+    /// Regenerate .rotiv/context.md from current project state
+    ContextRegen,
+    /// Analyze which routes are affected by changes to a file
+    DiffImpact {
+        /// File to analyze (e.g. app/models/user.ts)
+        file: String,
+    },
+}
+
+#[derive(Args)]
+pub struct AddArgs {
+    #[command(subcommand)]
+    pub subcommand: AddSubcommand,
+}
+
+#[derive(Subcommand)]
+pub enum AddSubcommand {
+    /// Generate a route file at app/routes/<path>.tsx
+    Route {
+        /// Route path, e.g. "users/[id]" or "products"
+        path: String,
+    },
+    /// Generate a model file at app/models/<name>.ts
+    Model {
+        /// Model name in PascalCase, e.g. "Post" or "UserProfile"
+        name: String,
     },
 }

@@ -4,7 +4,7 @@ mod error;
 mod output;
 
 use clap::Parser;
-use cli::{Cli, Commands};
+use cli::{AddSubcommand, Cli, Commands};
 use output::{human, json, OutputMode};
 
 fn main() {
@@ -23,6 +23,15 @@ fn main() {
         Commands::Migrate { generate_only, check } => {
             commands::migrate::run(*generate_only, *check, mode)
         }
+        Commands::Add(args) => match &args.subcommand {
+            AddSubcommand::Route { path } => commands::add::run_add_route(path, mode),
+            AddSubcommand::Model { name } => commands::add::run_add_model(name, mode),
+        },
+        Commands::SpecSync => commands::spec_sync::run(mode),
+        Commands::Validate { fix } => commands::validate::run(*fix, mode),
+        Commands::Explain { topic } => commands::explain::run(topic, mode),
+        Commands::ContextRegen => commands::context::run(mode),
+        Commands::DiffImpact { file } => commands::diff_impact::run(file, mode),
     };
 
     if let Err(e) = result {
