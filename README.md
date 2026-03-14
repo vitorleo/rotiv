@@ -30,7 +30,7 @@ Rotiv is designed so that an AI coding agent can build, extend, and maintain a p
 
 ```bash
 # Linux / macOS
-curl -fsSL https://github.com/rotiv-dev/rotiv/releases/latest/download/install.sh | bash
+curl -fsSL https://github.com/vitorleo/rotiv/releases/latest/download/install.sh | bash
 
 # Or download a binary directly from the releases page
 ```

@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 # Rotiv installer — downloads the latest release binary and installs it to /usr/local/bin
-# Usage: curl -fsSL https://github.com/rotiv-dev/rotiv/releases/latest/download/install.sh | bash
+# Usage: curl -fsSL https://github.com/vitorleo/rotiv/releases/latest/download/install.sh | bash
 
 set -euo pipefail
 
-REPO="rotiv-dev/rotiv"
+REPO="vitorleo/rotiv"
 INSTALL_DIR="${ROTIV_INSTALL_DIR:-/usr/local/bin}"
 BINARY_NAME="rotiv"
 
