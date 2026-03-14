@@ -1,6 +1,7 @@
 pub mod analysis;
 pub mod error;
 pub mod models;
+pub mod modules;
 pub mod project;
 pub mod proxy;
 pub mod router;
@@ -11,6 +12,10 @@ pub mod worker;
 pub use analysis::{Diagnostic, DiagnosticSeverity, apply_fixes, run_diagnostics};
 pub use error::RotivError;
 pub use models::{discover_models, ModelEntry};
+pub use modules::{
+    CapabilityConflict, MissingRequirement, ModuleManifest, ModuleTier, discover_modules,
+    resolve_capabilities,
+};
 pub use project::find_project_root;
 pub use proxy::{InvokeRequest, InvokeResponse, invoke_route};
 pub use router::{RouteEntry, RouteRegistry, SharedRegistry, new_shared_registry};

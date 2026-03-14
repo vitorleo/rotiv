@@ -12,6 +12,7 @@ const TOPICS: &[(&str, &str)] = &[
     ("signals", include_str!("../knowledge/signals.md")),
     ("migrate", include_str!("../knowledge/migrate.md")),
     ("context", include_str!("../knowledge/context.md")),
+    ("modules", include_str!("../knowledge/modules.md")),
 ];
 
 pub fn run(topic: &str, mode: OutputMode) -> Result<(), CliError> {
@@ -146,7 +147,7 @@ mod tests {
 
     #[test]
     fn all_topics_load() {
-        assert_eq!(TOPICS.len(), 8);
+        assert_eq!(TOPICS.len(), 9);
         for (name, content) in TOPICS {
             assert!(!name.is_empty());
             assert!(!content.is_empty(), "topic '{}' is empty", name);

@@ -1,0 +1,11 @@
+{
+  "name": "sessions",
+  "version": "0.1.0",
+  "description": "Cookie-based session management middleware",
+  "provides": ["sessions"],
+  "requires": [],
+  "configures": ["middleware"],
+  "tier": "primitive",
+  "entry": "index.ts",
+  "test": "module.test.ts"
+}

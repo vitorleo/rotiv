@@ -26,6 +26,7 @@ fn main() {
         Commands::Add(args) => match &args.subcommand {
             AddSubcommand::Route { path } => commands::add::run_add_route(path, mode),
             AddSubcommand::Model { name } => commands::add::run_add_model(name, mode),
+            AddSubcommand::Module { name } => commands::add::run_add_module(name, mode),
         },
         Commands::SpecSync => commands::spec_sync::run(mode),
         Commands::Validate { fix } => commands::validate::run(*fix, mode),

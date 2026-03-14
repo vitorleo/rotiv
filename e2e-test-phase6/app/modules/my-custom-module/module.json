@@ -1,0 +1,11 @@
+{
+  "name": "my-custom-module",
+  "version": "0.1.0",
+  "description": "my-custom-module module",
+  "provides": ["my-custom-module"],
+  "requires": [],
+  "configures": ["middleware"],
+  "tier": "slot",
+  "entry": "index.ts",
+  "test": "module.test.ts"
+}

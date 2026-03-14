@@ -1,0 +1,59 @@
+{
+  "$schema": "https://rotiv.dev/spec/v1",
+  "conventions": {
+    "components_dir": "app/components",
+    "models_dir": "app/models",
+    "routes_dir": "app/routes"
+  },
+  "framework_version": "0.1.0",
+  "models": [
+    {
+      "file": "app/models/user.ts",
+      "name": "User",
+      "table": "users"
+    }
+  ],
+  "modules": [
+    {
+      "name": "auth",
+      "version": "0.1.0"
+    },
+    {
+      "name": "file-uploads",
+      "version": "0.1.0"
+    },
+    {
+      "name": "sessions",
+      "version": "0.1.0"
+    },
+    {
+      "name": "my-custom-module",
+      "version": "0.1.0"
+    },
+    {
+      "name": "my-custom-module2",
+      "version": "0.1.0"
+    }
+  ],
+  "project": {
+    "created_at": "2026-03-14T00:00:00Z",
+    "name": "e2e-test-phase6"
+  },
+  "routes": [
+    {
+      "file": "app/routes/index.tsx",
+      "has_action": false,
+      "has_component": true,
+      "has_loader": true,
+      "path": "/"
+    },
+    {
+      "file": "app/routes/dashboard.tsx",
+      "has_action": false,
+      "has_component": true,
+      "has_loader": true,
+      "path": "/dashboard"
+    }
+  ],
+  "version": "1"
+}

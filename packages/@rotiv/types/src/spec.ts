@@ -14,9 +14,18 @@ export interface ModelEntry {
   file: string;
 }
 
+export type ModuleTier = "primitive" | "slot" | "escape_hatch";
+
 export interface ModuleEntry {
   name: string;
   version: string;
+  description?: string;
+  provides?: string[];
+  requires?: string[];
+  configures?: string[];
+  tier?: ModuleTier;
+  entry?: string;
+  test?: string;
 }
 
 export interface SpecConventions {

@@ -30,9 +30,13 @@ pub fn run_for_project(project_dir: &Path, mode: OutputMode) -> Result<(), CliEr
     // Discover models via rotiv_orm
     let models = discover_models_entries(project_dir);
 
+    // Discover modules
+    let modules = discover_modules_entries(project_dir);
+
     // Update spec
     spec["routes"] = serde_json::Value::Array(routes.clone());
     spec["models"] = serde_json::Value::Array(models.clone());
+    spec["modules"] = serde_json::Value::Array(modules.clone());
 
     // Write back
     if let Some(parent) = spec_path.parent() {
@@ -44,9 +48,10 @@ pub fn run_for_project(project_dir: &Path, mode: OutputMode) -> Result<(), CliEr
     match mode {
         OutputMode::Human => {
             human::print_success(&format!(
-                "synced {} route(s), {} model(s) → .rotiv/spec.json",
+                "synced {} route(s), {} model(s), {} module(s) → .rotiv/spec.json",
                 routes.len(),
-                models.len()
+                models.len(),
+                modules.len()
             ));
         }
         OutputMode::Json => {
@@ -56,6 +61,7 @@ pub fn run_for_project(project_dir: &Path, mode: OutputMode) -> Result<(), CliEr
                     "ok": true,
                     "routes": routes.len(),
                     "models": models.len(),
+                    "modules": modules.len(),
                     "spec": ".rotiv/spec.json"
                 })
             );
@@ -189,6 +195,25 @@ fn discover_models_entries(project_dir: &Path) -> Vec<serde_json::Value> {
                 "name": m.name,
                 "file": file_rel,
                 "table": table,
+            })
+        })
+        .collect()
+}
+
+fn discover_modules_entries(project_dir: &Path) -> Vec<serde_json::Value> {
+    use rotiv_core::discover_modules;
+
+    let module_manifests = match discover_modules(project_dir) {
+        Ok(v) => v,
+        Err(_) => return Vec::new(),
+    };
+
+    module_manifests
+        .into_iter()
+        .map(|m| {
+            serde_json::json!({
+                "name": m.name,
+                "version": m.version,
             })
         })
         .collect()

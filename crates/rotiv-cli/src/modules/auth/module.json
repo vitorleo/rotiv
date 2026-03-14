@@ -1,0 +1,11 @@
+{
+  "name": "auth",
+  "version": "0.1.0",
+  "description": "Authentication middleware: login, logout, protect routes",
+  "provides": ["auth"],
+  "requires": ["sessions"],
+  "configures": ["middleware"],
+  "tier": "slot",
+  "entry": "index.ts",
+  "test": "module.test.ts"
+}

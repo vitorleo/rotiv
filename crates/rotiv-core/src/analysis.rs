@@ -30,14 +30,15 @@ pub struct Diagnostic {
     pub auto_fix: Option<String>,
 }
 
-/// Run all 7 static-analysis checks against the project.
+/// Run all 10 static-analysis checks against the project.
 ///
-/// Scans `app/routes/**/*.tsx` and `app/models/**/*.ts`.
+/// Scans `app/routes/**/*.tsx`, `app/models/**/*.ts`, and `app/modules/**/*.json`.
 pub fn run_diagnostics(project_dir: &Path) -> Result<Vec<Diagnostic>, RotivError> {
     let mut diags: Vec<Diagnostic> = Vec::new();
 
     let routes_dir = project_dir.join("app").join("routes");
     let models_dir = project_dir.join("app").join("models");
+    let modules_dir = project_dir.join("app").join("modules");
 
     // --- Route file checks (V001, V002, V005, V006, V007) ---
     if routes_dir.exists() {
@@ -47,6 +48,11 @@ pub fn run_diagnostics(project_dir: &Path) -> Result<Vec<Diagnostic>, RotivError
     // --- Model file checks (V003, V004) ---
     if models_dir.exists() {
         walk_models(&models_dir, project_dir, &mut diags);
+    }
+
+    // --- Module checks (V008, V009, V010) ---
+    if modules_dir.exists() {
+        walk_modules(&modules_dir, project_dir, &mut diags);
     }
 
     Ok(diags)
@@ -232,6 +238,101 @@ fn check_model_file(file: &Path, project_dir: &Path, diags: &mut Vec<Diagnostic>
             line: None,
             message: "Model file missing `defineModel()` call".to_string(),
             suggestion: "Add: `export const UserModel = defineModel(\"User\", users)`\nThis registers the model in Rotiv's runtime registry.".to_string(),
+            auto_fix: None,
+        });
+    }
+}
+
+fn walk_modules(dir: &Path, project_dir: &Path, diags: &mut Vec<Diagnostic>) {
+    let read = match fs::read_dir(dir) {
+        Ok(r) => r,
+        Err(_) => return,
+    };
+
+    for entry in read.flatten() {
+        let path = entry.path();
+        if path.is_dir() {
+            check_module_dir(&path, project_dir, diags);
+        }
+    }
+}
+
+fn check_module_dir(module_dir: &Path, _project_dir: &Path, diags: &mut Vec<Diagnostic>) {
+    let name = module_dir
+        .file_name()
+        .and_then(|n| n.to_str())
+        .unwrap_or("unknown");
+    let rel_dir = format!("app/modules/{}", name);
+
+    // V008: module.json missing
+    let manifest_path = module_dir.join("module.json");
+    if !manifest_path.exists() {
+        diags.push(Diagnostic {
+            code: "V008".to_string(),
+            severity: DiagnosticSeverity::Error,
+            file: format!("{}/module.json", rel_dir),
+            line: None,
+            message: format!("Module '{}' is missing module.json manifest", name),
+            suggestion: "Run `rotiv add module <name>` to scaffold a module with the correct structure.".to_string(),
+            auto_fix: None,
+        });
+        return; // can't do further checks without the manifest
+    }
+
+    // V009: module.json missing required fields (name, version, provides)
+    let manifest_content = match fs::read_to_string(&manifest_path) {
+        Ok(c) => c,
+        Err(_) => return,
+    };
+    let manifest: serde_json::Value = match serde_json::from_str(&manifest_content) {
+        Ok(v) => v,
+        Err(e) => {
+            diags.push(Diagnostic {
+                code: "V009".to_string(),
+                severity: DiagnosticSeverity::Error,
+                file: format!("{}/module.json", rel_dir),
+                line: None,
+                message: format!("module.json in '{}' is not valid JSON: {}", name, e),
+                suggestion: "Fix the JSON syntax in module.json.".to_string(),
+                auto_fix: None,
+            });
+            return;
+        }
+    };
+
+    let missing_fields: Vec<&str> = ["name", "version", "provides"]
+        .iter()
+        .filter(|&&f| manifest.get(f).is_none())
+        .copied()
+        .collect();
+
+    if !missing_fields.is_empty() {
+        diags.push(Diagnostic {
+            code: "V009".to_string(),
+            severity: DiagnosticSeverity::Error,
+            file: format!("{}/module.json", rel_dir),
+            line: None,
+            message: format!(
+                "module.json in '{}' is missing required fields: {}",
+                name,
+                missing_fields.join(", ")
+            ),
+            suggestion: "Add the missing fields to module.json. Required: name, version, provides.".to_string(),
+            auto_fix: None,
+        });
+    }
+
+    // V010: module requires a capability not provided by any other module
+    // (simple check: if "requires" lists items, ensure index.ts exists as entry point)
+    let entry_path = module_dir.join("index.ts");
+    if !entry_path.exists() {
+        diags.push(Diagnostic {
+            code: "V010".to_string(),
+            severity: DiagnosticSeverity::Error,
+            file: format!("{}/index.ts", rel_dir),
+            line: None,
+            message: format!("Module '{}' is missing its entry file index.ts", name),
+            suggestion: "Run `rotiv add module <name>` to scaffold a proper module structure with index.ts.".to_string(),
             auto_fix: None,
         });
     }

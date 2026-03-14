@@ -1,0 +1,11 @@
+{
+  "name": "file-uploads",
+  "version": "0.1.0",
+  "description": "Multipart file upload handling middleware",
+  "provides": ["file-uploads"],
+  "requires": [],
+  "configures": ["middleware"],
+  "tier": "slot",
+  "entry": "index.ts",
+  "test": "module.test.ts"
+}

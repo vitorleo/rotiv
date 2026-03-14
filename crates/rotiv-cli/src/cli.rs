@@ -89,4 +89,9 @@ pub enum AddSubcommand {
         /// Model name in PascalCase, e.g. "Post" or "UserProfile"
         name: String,
     },
+    /// Scaffold a module directory at app/modules/<name>/
+    Module {
+        /// Module name in lowercase-hyphen format, e.g. "auth" or "file-uploads"
+        name: String,
+    },
 }

@@ -1,0 +1,11 @@
+{
+  "name": "{{module_name}}",
+  "version": "0.1.0",
+  "description": "{{module_name}} module",
+  "provides": ["{{module_name}}"],
+  "requires": [],
+  "configures": ["middleware"],
+  "tier": "slot",
+  "entry": "index.ts",
+  "test": "module.test.ts"
+}
