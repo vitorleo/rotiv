@@ -19,7 +19,7 @@
     "prepublishOnly": "pnpm build"
   },
   "dependencies": {
-    "@rotiv/types": "^0.2.0"
+    "@rotiv/types": "workspace:*"
   },
   "devDependencies": {
     "typescript": "^5.0.0"

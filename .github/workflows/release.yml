@@ -43,9 +43,13 @@ jobs:
           node-version: 22
 
       - name: Install and build TypeScript packages
+        # Build @rotiv/types first (other packages depend on its dist/).
         # Required before `cargo build` so that include_str!() can embed the
         # compiled route-worker and migrate-script source files.
-        run: pnpm install && pnpm -r run build
+        run: |
+          pnpm install
+          pnpm --filter @rotiv/types build
+          pnpm -r --filter '!todo' run build
 
       - name: Install Rust target
         run: rustup target add ${{ matrix.target }}
