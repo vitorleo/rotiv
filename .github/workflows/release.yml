@@ -49,7 +49,7 @@ jobs:
         run: |
           pnpm install
           pnpm --filter @rotiv/types build
-          pnpm -r --filter '!todo' run build
+          pnpm -r --filter '!todo' --filter '!rotiv' run build
 
       - name: Install Rust target
         run: rustup target add ${{ matrix.target }}
