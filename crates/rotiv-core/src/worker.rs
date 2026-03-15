@@ -53,11 +53,14 @@ impl RouteWorker {
         // from the OS temp cache can resolve @rotiv/* packages.
         let node_modules = worker_package_dir.join("node_modules");
 
+        // Resolve tsx loader — prefer project node_modules, fall back to binary-adjacent copy.
+        let tsx_loader = resolve_tsx_loader(&self.project_dir);
+
         let child = tokio::process::Command::new("node")
             .arg("--import")
-            .arg("tsx")
+            .arg(&tsx_loader)
             .arg(&self.worker_path)
-            .current_dir(worker_package_dir)
+            .current_dir(&worker_package_dir)
             .env("ROTIV_WORKER_PORT", self.port.to_string())
             .env("ROTIV_PROJECT_DIR", self.project_dir.display().to_string())
             .env("NODE_PATH", node_modules)
@@ -67,7 +70,8 @@ impl RouteWorker {
             .map_err(|e| {
                 RotivError::new("E_WORKER_SPAWN", format!("failed to start route worker: {e}"))
                     .with_suggestion(
-                        "Make sure Node.js is installed and available in your PATH",
+                        "Make sure Node.js is installed and available in your PATH. \
+                         Install tsx with: npm install -g tsx",
                     )
             })?;
 
@@ -124,6 +128,42 @@ impl Drop for RouteWorker {
             let _ = child.start_kill();
         }
     }
+}
+
+/// Resolve the `tsx` ESM loader specifier for use with `node --import`.
+///
+/// Resolution order:
+/// 1. `project_dir/node_modules/tsx/dist/esm/index.cjs` (user has tsx installed)
+/// 2. Binary-adjacent `node_modules/tsx/dist/esm/index.cjs` (bundled with rotiv install)
+/// 3. Fall back to bare `"tsx"` (relies on NODE_PATH or global install)
+pub fn resolve_tsx_loader(project_dir: &std::path::Path) -> String {
+    let tsx_subpath = ["tsx", "dist", "esm", "index.cjs"].iter().collect::<std::path::PathBuf>();
+
+    // 1. Project node_modules
+    let project_tsx = project_dir.join("node_modules").join(&tsx_subpath);
+    if project_tsx.exists() {
+        return project_tsx.display().to_string();
+    }
+
+    // 2. Binary-adjacent node_modules (installed alongside rotiv binary)
+    if let Ok(exe) = std::env::current_exe() {
+        if let Some(bin_dir) = exe.parent() {
+            let adj_tsx = bin_dir.join("node_modules").join(&tsx_subpath);
+            if adj_tsx.exists() {
+                return adj_tsx.display().to_string();
+            }
+            // Also check one level up (e.g. .cargo/bin/../node_modules)
+            if let Some(parent) = bin_dir.parent() {
+                let up_tsx = parent.join("node_modules").join(&tsx_subpath);
+                if up_tsx.exists() {
+                    return up_tsx.display().to_string();
+                }
+            }
+        }
+    }
+
+    // 3. Bare fallback — works if tsx is globally installed or in PATH
+    "tsx".to_string()
 }
 
 /// Resolve the path to the route-worker entry point.

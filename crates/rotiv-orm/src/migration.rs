@@ -45,6 +45,36 @@ struct MigrateScriptOutput {
     pending: Option<u32>,
 }
 
+/// Resolve the `tsx` ESM loader for `node --import`.
+/// Searches project node_modules, then binary-adjacent node_modules, then falls back to bare "tsx".
+fn resolve_tsx_loader(project_dir: &Path) -> String {
+    let tsx_subpath: std::path::PathBuf = ["tsx", "dist", "esm", "index.cjs"].iter().collect();
+
+    // 1. Project node_modules
+    let project_tsx = project_dir.join("node_modules").join(&tsx_subpath);
+    if project_tsx.exists() {
+        return project_tsx.display().to_string();
+    }
+
+    // 2. Binary-adjacent node_modules
+    if let Ok(exe) = std::env::current_exe() {
+        if let Some(bin_dir) = exe.parent() {
+            let adj = bin_dir.join("node_modules").join(&tsx_subpath);
+            if adj.exists() {
+                return adj.display().to_string();
+            }
+            if let Some(parent) = bin_dir.parent() {
+                let up = parent.join("node_modules").join(&tsx_subpath);
+                if up.exists() {
+                    return up.display().to_string();
+                }
+            }
+        }
+    }
+
+    "tsx".to_string()
+}
+
 /// Run migrations by spawning the Node.js migrate script.
 ///
 /// The script is located via (priority order):
@@ -63,9 +93,11 @@ pub fn run_migrations(options: MigrationOptions) -> Result<MigrationResult, OrmE
         "--migrate"
     };
 
+    let tsx_loader = resolve_tsx_loader(&options.project_dir);
+
     let output = std::process::Command::new("node")
         .arg("--import")
-        .arg("tsx")
+        .arg(&tsx_loader)
         .arg(&script_path)
         .arg("--project")
         .arg(&options.project_dir)
@@ -80,7 +112,7 @@ pub fn run_migrations(options: MigrationOptions) -> Result<MigrationResult, OrmE
             (false, false) => format!("{stderr}\n{stdout}"),
             (false, true) => stderr,
             (true, false) => stdout,
-            (true, true) => "no output from drizzle-kit".to_string(),
+            (true, true) => "no output — tsx or drizzle-kit may not be installed (run: npm install -g tsx)".to_string(),
         };
         return Err(OrmError::MigrationFailed(detail));
     }

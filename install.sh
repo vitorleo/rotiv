@@ -50,6 +50,22 @@ echo "  artifact: ${ARTIFACT}"
 echo "  destination: ${INSTALL_DIR}/${BINARY_NAME}"
 echo ""
 
+# --- Check prerequisites ---
+if ! command -v node &>/dev/null; then
+  echo "Error: Node.js is required but not found in PATH." >&2
+  echo "  Install Node.js 20+: https://nodejs.org" >&2
+  exit 1
+fi
+
+if ! command -v tsx &>/dev/null; then
+  echo "Note: tsx is required for rotiv dev and rotiv migrate."
+  echo "  Installing tsx globally..."
+  npm install -g tsx || {
+    echo "Warning: failed to install tsx. Run manually: npm install -g tsx" >&2
+  }
+fi
+echo ""
+
 # --- Download ---
 TMP_FILE="$(mktemp)"
 trap 'rm -f "$TMP_FILE"' EXIT
@@ -80,6 +96,8 @@ if command -v rotiv &>/dev/null; then
   echo ""
   echo "✓ Rotiv installed successfully: ${VERSION}"
   echo "  Run 'rotiv new myapp' to create your first project."
+  echo ""
+  echo "  Requirements: node ($(node --version)), tsx ($(tsx --version 2>/dev/null || echo 'not found'))"
 else
   echo ""
   echo "✓ Installed to ${INSTALL_DIR}/${BINARY_NAME}"
