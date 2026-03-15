@@ -46,4 +46,9 @@ impl RotivError {
         self.got = Some(got.into());
         self
     }
+
+    pub fn with_corrected_code(mut self, corrected_code: impl Into<String>) -> Self {
+        self.corrected_code = Some(corrected_code.into());
+        self
+    }
 }

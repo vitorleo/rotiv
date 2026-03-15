@@ -1,17 +1,25 @@
 {
   "name": "@rotiv/sdk",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": false,
   "type": "module",
   "description": "Rotiv framework SDK — runtime APIs and utilities",
-  "main": "./src/index.ts",
-  "types": "./src/index.ts",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": ["dist"],
   "scripts": {
     "typecheck": "tsc --noEmit",
-    "build": "tsc --project tsconfig.build.json"
+    "build": "tsc --project tsconfig.build.json",
+    "prepublishOnly": "pnpm build"
   },
   "dependencies": {
-    "@rotiv/types": "workspace:*"
+    "@rotiv/types": "^0.2.0"
   },
   "devDependencies": {
     "typescript": "^5.0.0"

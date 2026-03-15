@@ -5,7 +5,8 @@
   "private": true,
   "description": "Internal migration script invoked by rotiv-orm (Rust) to run drizzle-kit",
   "scripts": {
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "build": "tsc --project tsconfig.json"
   },
   "dependencies": {
     "@rotiv/orm": "workspace:*",

@@ -15,6 +15,10 @@ pub struct MigrationOptions {
     pub check_only: bool,
     /// Emit JSON to stdout instead of human-readable output.
     pub json_output: bool,
+    /// Explicit path to the migrate script entry point.
+    /// When set (e.g. written to a temp dir from embedded source by the CLI),
+    /// this takes priority over the monorepo dev-layout path.
+    pub script_path: Option<PathBuf>,
 }
 
 /// Result of a successful migration run.
@@ -48,7 +52,7 @@ struct MigrateScriptOutput {
 ///   2. `<binary>/../../packages/@rotiv/migrate-script/src/index.ts` (dev monorepo)
 ///   3. `<binary>/migrate-script/index.ts` (production)
 pub fn run_migrations(options: MigrationOptions) -> Result<MigrationResult, OrmError> {
-    let script_path = resolve_migrate_script_path()?;
+    let script_path = resolve_migrate_script_path(options.script_path.clone())?;
     let started = Instant::now();
 
     let mode_flag = if options.generate_only {
@@ -115,6 +119,7 @@ pub fn auto_migrate(project_dir: &Path) -> Result<MigrationResult, OrmError> {
         generate_only: false,
         check_only: true,
         json_output: false,
+        script_path: None,
     })?;
 
     let pending = check_result.migrations_applied; // pending field maps here from check mode
@@ -128,11 +133,18 @@ pub fn auto_migrate(project_dir: &Path) -> Result<MigrationResult, OrmError> {
         generate_only: false,
         check_only: false,
         json_output: false,
+        script_path: None,
     })
 }
 
 /// Resolve the path to the Node.js migrate script.
-pub fn resolve_migrate_script_path() -> Result<PathBuf, OrmError> {
+///
+/// Resolution order:
+/// 1. `ROTIV_MIGRATE_SCRIPT_PATH` env var
+/// 2. `embedded_path` — explicit path provided by the CLI (e.g. temp dir with embedded source)
+/// 3. `<binary>/../../../packages/@rotiv/migrate-script/src/index.ts` (dev monorepo layout)
+/// 4. `<binary>/migrate-script/index.ts` (production binary-relative layout)
+pub fn resolve_migrate_script_path(embedded_path: Option<PathBuf>) -> Result<PathBuf, OrmError> {
     // 1. Environment variable override
     if let Ok(path) = std::env::var("ROTIV_MIGRATE_SCRIPT_PATH") {
         let p = PathBuf::from(&path);
@@ -144,8 +156,15 @@ pub fn resolve_migrate_script_path() -> Result<PathBuf, OrmError> {
         )));
     }
 
+    // 2. Embedded path from CLI (written from include_str! source at startup)
+    if let Some(p) = embedded_path {
+        if p.exists() {
+            return Ok(p);
+        }
+    }
+
     if let Ok(exe) = std::env::current_exe() {
-        // 2. Dev monorepo layout
+        // 3. Dev monorepo layout
         let dev_path = exe
             .parent()
             .and_then(|p| p.parent())
@@ -165,7 +184,7 @@ pub fn resolve_migrate_script_path() -> Result<PathBuf, OrmError> {
             }
         }
 
-        // 3. Production layout
+        // 4. Production layout
         let prod_path = exe
             .parent()
             .map(|dir| dir.join("migrate-script").join("index.ts"));
@@ -193,6 +212,7 @@ mod tests {
             generate_only: false,
             check_only: true,
             json_output: false,
+            script_path: None,
         };
         assert!(opts.check_only);
         assert!(!opts.generate_only);
@@ -201,7 +221,7 @@ mod tests {
     #[test]
     fn resolve_script_env_override_missing() {
         std::env::set_var("ROTIV_MIGRATE_SCRIPT_PATH", "/nonexistent/path/index.ts");
-        let result = resolve_migrate_script_path();
+        let result = resolve_migrate_script_path(None);
         std::env::remove_var("ROTIV_MIGRATE_SCRIPT_PATH");
         assert!(matches!(result, Err(OrmError::ScriptNotFound(_))));
     }

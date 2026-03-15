@@ -1,8 +1,40 @@
+use std::io::Write;
+
 use rotiv_core::find_project_root;
 use rotiv_orm::{MigrationOptions, run_migrations};
 
 use crate::error::CliError;
 use crate::output::OutputMode;
+
+// Embed the migrate-script TypeScript source files at compile time.
+const MIGRATE_INDEX: &str = include_str!("../../../../packages/@rotiv/migrate-script/src/index.ts");
+const MIGRATE_RUNNER: &str = include_str!("../../../../packages/@rotiv/migrate-script/src/runner.ts");
+const MIGRATE_CONFIG: &str = include_str!("../../../../packages/@rotiv/migrate-script/src/drizzle-config.ts");
+
+/// Write the embedded migrate-script source to a temp directory and return the
+/// path to `index.ts`. The `TempDir` must be kept alive for the migration run.
+fn write_embedded_migrate_script() -> Result<(tempfile::TempDir, std::path::PathBuf), CliError> {
+    let dir = tempfile::tempdir()
+        .map_err(|e| CliError::Other(format!("failed to create temp dir for migrate-script: {e}")))?;
+    let src = dir.path().join("src");
+    std::fs::create_dir_all(&src)
+        .map_err(|e| CliError::Other(format!("failed to create migrate-script src dir: {e}")))?;
+
+    let files = [
+        ("index.ts", MIGRATE_INDEX),
+        ("runner.ts", MIGRATE_RUNNER),
+        ("drizzle-config.ts", MIGRATE_CONFIG),
+    ];
+    for (name, content) in &files {
+        let mut f = std::fs::File::create(src.join(name))
+            .map_err(|e| CliError::Other(format!("failed to write migrate-script/{name}: {e}")))?;
+        f.write_all(content.as_bytes())
+            .map_err(|e| CliError::Other(format!("failed to write migrate-script/{name}: {e}")))?;
+    }
+
+    let entry = src.join("index.ts");
+    Ok((dir, entry))
+}
 
 pub fn run(generate_only: bool, check: bool, mode: OutputMode) -> Result<(), CliError> {
     let project_dir = find_project_root().map_err(CliError::Rotiv)?;
@@ -18,11 +50,15 @@ pub fn run(generate_only: bool, check: bool, mode: OutputMode) -> Result<(), Cli
         return Ok(());
     }
 
+    // Write embedded migrate-script to temp dir; keep alive for the duration of the run.
+    let (_script_dir, script_entry) = write_embedded_migrate_script()?;
+
     let options = MigrationOptions {
         project_dir,
         generate_only,
         check_only: check,
         json_output: matches!(mode, OutputMode::Json),
+        script_path: Some(script_entry),
     };
 
     let result = run_migrations(options)

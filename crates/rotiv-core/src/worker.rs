@@ -15,8 +15,11 @@ pub struct RouteWorker {
 
 impl RouteWorker {
     /// Create a new worker manager. Does not start the process.
-    pub fn new(project_dir: PathBuf, port: u16) -> Result<Self, RotivError> {
-        let worker_path = resolve_worker_path()?;
+    ///
+    /// `embedded_path` — if provided, use this path directly (highest priority after env var).
+    /// This is set by the CLI when it has written the embedded worker source to a temp directory.
+    pub fn new(project_dir: PathBuf, port: u16, embedded_path: Option<PathBuf>) -> Result<Self, RotivError> {
+        let worker_path = resolve_worker_path(embedded_path)?;
         Ok(Self {
             process: None,
             port,
@@ -31,17 +34,23 @@ impl RouteWorker {
             return Ok(()); // already running
         }
 
-        // Run from the worker package directory so that `tsx` and
-        // `@rotiv/jsx-runtime` can be resolved from its own node_modules
-        // (the project dir may not have these packages installed).
-        let worker_package_dir = self
-            .worker_path
-            .parent()
-            .and_then(|p| p.parent()) // src/ -> package root
-            .unwrap_or(&self.worker_path);
+        // Run from the project directory so that user's node_modules are available.
+        // When running from a temp dir (embedded worker), fall back to the parent
+        // of the worker file so relative imports within the worker still resolve.
+        let worker_package_dir = {
+            let parent = self.worker_path.parent().and_then(|p| p.parent()); // src/ -> package root
+            // Prefer project_dir if it has node_modules (standalone install case)
+            if self.project_dir.join("node_modules").exists() {
+                self.project_dir.clone()
+            } else if let Some(p) = parent {
+                p.to_path_buf()
+            } else {
+                self.project_dir.clone()
+            }
+        };
 
-        // Also expose worker's node_modules via NODE_PATH so that compiled
-        // .mjs files loaded from the OS temp cache can resolve @rotiv/* packages.
+        // Expose node_modules via NODE_PATH so that compiled .mjs files loaded
+        // from the OS temp cache can resolve @rotiv/* packages.
         let node_modules = worker_package_dir.join("node_modules");
 
         let child = tokio::process::Command::new("node")
@@ -121,9 +130,10 @@ impl Drop for RouteWorker {
 ///
 /// Resolution order:
 /// 1. `ROTIV_WORKER_PATH` env var
-/// 2. `<binary_dir>/../../packages/@rotiv/route-worker/src/index.ts` (dev layout)
-/// 3. `<binary_dir>/route-worker/index.ts` (production layout)
-pub fn resolve_worker_path() -> Result<PathBuf, RotivError> {
+/// 2. `embedded_path` — explicit path provided by the CLI (e.g. temp dir with embedded source)
+/// 3. `<binary_dir>/../../packages/@rotiv/route-worker/src/index.ts` (dev monorepo layout)
+/// 4. `<binary_dir>/route-worker/index.ts` (production binary-relative layout)
+pub fn resolve_worker_path(embedded_path: Option<PathBuf>) -> Result<PathBuf, RotivError> {
     // 1. Environment variable override
     if let Ok(path) = std::env::var("ROTIV_WORKER_PATH") {
         let p = PathBuf::from(&path);
@@ -139,7 +149,14 @@ pub fn resolve_worker_path() -> Result<PathBuf, RotivError> {
         );
     }
 
-    // 2. Dev layout: binary is at target/debug/rotiv, worker is at packages/@rotiv/route-worker/src/index.ts
+    // 2. Embedded path from CLI (written from include_str! source at startup)
+    if let Some(p) = embedded_path {
+        if p.exists() {
+            return Ok(p);
+        }
+    }
+
+    // 3. Dev layout: binary is at target/debug/rotiv, worker is at packages/@rotiv/route-worker/src/index.ts
     if let Ok(binary_dir) = std::env::current_exe().map(|p| p.parent().unwrap_or(&p).to_path_buf())
     {
         let dev_path = binary_dir
@@ -155,7 +172,7 @@ pub fn resolve_worker_path() -> Result<PathBuf, RotivError> {
             return Ok(canonical);
         }
 
-        // 3. Production layout: worker bundled alongside binary
+        // 4. Production layout: worker bundled alongside binary
         let prod_path = binary_dir.join("route-worker").join("index.ts");
         if prod_path.exists() {
             return Ok(prod_path);
@@ -181,10 +198,21 @@ mod tests {
     fn resolve_worker_path_with_env_var() {
         // Point to a file that doesn't exist — should return E_WORKER_NOT_FOUND
         std::env::set_var("ROTIV_WORKER_PATH", "/nonexistent/index.ts");
-        let result = resolve_worker_path();
+        let result = resolve_worker_path(None);
         std::env::remove_var("ROTIV_WORKER_PATH");
         assert!(result.is_err());
         let err = result.unwrap_err();
         assert_eq!(err.code, "E_WORKER_NOT_FOUND");
+    }
+
+    #[test]
+    fn resolve_worker_path_uses_embedded_when_provided() {
+        use std::io::Write;
+        let dir = tempfile::tempdir().unwrap();
+        let p = dir.path().join("index.ts");
+        std::fs::File::create(&p).unwrap().write_all(b"// stub").unwrap();
+        let result = resolve_worker_path(Some(p.clone()));
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap(), p);
     }
 }

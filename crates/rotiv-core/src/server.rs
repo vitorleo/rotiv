@@ -27,6 +27,10 @@ pub struct DevServerConfig {
     pub project_dir: PathBuf,
     pub worker_port: u16,
     pub json_output: bool,
+    /// Explicit path to the route-worker entry point.
+    /// When set (e.g. from an embedded source written to a temp dir by the CLI),
+    /// this takes priority over the monorepo dev-layout path.
+    pub worker_path: Option<PathBuf>,
 }
 
 /// Shared application state passed to axum handlers.
@@ -55,12 +59,12 @@ impl DevServer {
         {
             let mut reg = registry.write().await;
             reg.load()?;
-            print_routes(&reg.entries(), self.config.json_output);
+            print_routes(&reg.entries(), self.config.json_output, &self.config.project_dir);
         }
 
         // --- Step 2: Start route worker ---
         let worker_port = find_available_port(self.config.worker_port).await;
-        let mut worker = RouteWorker::new(self.config.project_dir.clone(), worker_port)?;
+        let mut worker = RouteWorker::new(self.config.project_dir.clone(), worker_port, self.config.worker_path.clone())?;
         worker.start().await?;
 
         if self.config.json_output {
@@ -339,7 +343,7 @@ async fn find_available_port(preferred: u16) -> u16 {
     preferred // fallback — will fail at bind time with a clear error
 }
 
-fn print_routes(entries: &[crate::router::RouteEntry], json: bool) {
+fn print_routes(entries: &[crate::router::RouteEntry], json: bool, project_dir: &std::path::Path) {
     if json {
         let routes: Vec<serde_json::Value> = entries
             .iter()
@@ -360,11 +364,11 @@ fn print_routes(entries: &[crate::router::RouteEntry], json: bool) {
                 let label = if entry.is_api_only { "API" } else { "GET" };
                 let file = entry
                     .file_path
-                    .file_name()
-                    .map(|f| f.to_string_lossy().to_string())
-                    .unwrap_or_default();
+                    .strip_prefix(project_dir)
+                    .map(|p| p.display().to_string())
+                    .unwrap_or_else(|_| entry.file_path.display().to_string());
                 println!(
-                    "  {}  {}  →  app/routes/{}",
+                    "  {}  {}  →  {}",
                     label, entry.route_path, file
                 );
             }

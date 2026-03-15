@@ -6,7 +6,8 @@
   "description": "Internal route-worker process for Rotiv dev server (Phase 2)",
   "scripts": {
     "start": "node --import tsx src/index.ts",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "build": "tsc --project tsconfig.json"
   },
   "dependencies": {
     "@rotiv/jsx-runtime": "workspace:*",

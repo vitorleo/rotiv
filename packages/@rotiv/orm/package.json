@@ -1,14 +1,22 @@
 {
   "name": "@rotiv/orm",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": false,
   "type": "module",
   "description": "Rotiv model DSL and typed query builder — wraps Drizzle ORM",
-  "scripts": {
-    "typecheck": "tsc --noEmit"
-  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "exports": {
-    ".": "./src/index.ts"
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": ["dist"],
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "build": "tsc --project tsconfig.json",
+    "prepublishOnly": "pnpm build"
   },
   "dependencies": {
     "drizzle-orm": "^0.44.0",

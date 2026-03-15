@@ -69,11 +69,14 @@ pub fn run_add_model(name: &str, mode: OutputMode) -> Result<(), CliError> {
         || !name.chars().next().map(|c| c.is_uppercase()).unwrap_or(false)
         || !name.chars().all(|c| c.is_alphanumeric())
     {
+        let corrected = to_pascal_case(name);
         let err = RotivError::new(
             "E011",
             format!("invalid model name '{}': must be PascalCase (e.g. Post, UserProfile)", name),
         )
-        .with_expected("PascalCase name (e.g. Post)", name);
+        .with_expected("PascalCase name (e.g. Post)", name)
+        .with_suggestion(format!("Did you mean '{}'?", corrected))
+        .with_corrected_code(corrected);
         return Err(CliError::Rotiv(err));
     }
 
@@ -223,6 +226,7 @@ pub fn run_add_module(name: &str, mode: OutputMode) -> Result<(), CliError> {
             .chars()
             .all(|c| c.is_ascii_lowercase() || c.is_ascii_digit() || c == '-')
     {
+        let corrected = to_kebab_case(name);
         let err = RotivError::new(
             "E012",
             format!(
@@ -230,7 +234,9 @@ pub fn run_add_module(name: &str, mode: OutputMode) -> Result<(), CliError> {
                 name
             ),
         )
-        .with_expected("lowercase-hyphen-name (e.g. auth, file-uploads)", name);
+        .with_expected("lowercase-hyphen-name (e.g. auth, file-uploads)", name)
+        .with_suggestion(format!("Did you mean '{}'?", corrected))
+        .with_corrected_code(corrected);
         return Err(CliError::Rotiv(err));
     }
 
@@ -317,6 +323,36 @@ fn add_module_to_spec(project_dir: &Path, name: &str, manifest_json: &str) -> Re
     let json_str = serde_json::to_string_pretty(&spec).unwrap_or_default();
     std::fs::write(&spec_path, json_str)?;
     Ok(())
+}
+
+/// Convert any string to PascalCase. "user_profile" / "user-profile" → "UserProfile"
+fn to_pascal_case(name: &str) -> String {
+    name.split(|c: char| c == '_' || c == '-' || c == ' ')
+        .filter(|s| !s.is_empty())
+        .map(|word| {
+            let mut chars = word.chars();
+            match chars.next() {
+                None => String::new(),
+                Some(first) => first.to_uppercase().collect::<String>() + &chars.as_str().to_lowercase(),
+            }
+        })
+        .collect()
+}
+
+/// Convert any string to kebab-case. "MyModule" / "my_module" → "my-module"
+fn to_kebab_case(name: &str) -> String {
+    let mut out = String::new();
+    for (i, ch) in name.chars().enumerate() {
+        if ch.is_uppercase() && i > 0 {
+            out.push('-');
+            out.push(ch.to_lowercase().next().unwrap_or(ch));
+        } else if ch == '_' || ch == ' ' {
+            out.push('-');
+        } else {
+            out.push(ch.to_lowercase().next().unwrap_or(ch));
+        }
+    }
+    out
 }
 
 /// Convert hyphen-case to camelCase for use in import statements.

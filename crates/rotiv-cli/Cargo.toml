@@ -17,6 +17,7 @@ thiserror = { workspace = true }
 anyhow = { workspace = true }
 tokio = { workspace = true }
 colored = "2"
+tempfile = "3"
 
 [dependencies.rotiv-core]
 path = "../rotiv-core"
