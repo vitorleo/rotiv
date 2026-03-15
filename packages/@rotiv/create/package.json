@@ -2,20 +2,23 @@
   "name": "@rotiv/create",
   "version": "0.1.0",
   "private": false,
+  "type": "module",
   "description": "Create a new Rotiv project (npx create-rotiv)",
   "bin": {
-    "create-rotiv": "./src/index.ts"
+    "create-rotiv": "./dist/index.js"
   },
+  "files": ["dist"],
   "scripts": {
     "typecheck": "tsc --noEmit",
-    "build": "tsc --project tsconfig.build.json"
+    "build": "tsc --project tsconfig.build.json",
+    "prepublishOnly": "pnpm build"
   },
   "dependencies": {
     "@rotiv/types": "workspace:*",
     "@rotiv/spec": "workspace:*"
   },
   "devDependencies": {
-    "typescript": "^5.0.0",
-    "@types/node": "^22.0.0"
+    "@types/node": "^22.0.0",
+    "typescript": "^5.0.0"
   }
 }
