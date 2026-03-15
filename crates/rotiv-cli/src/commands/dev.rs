@@ -40,6 +40,10 @@ fn write_embedded_worker() -> Result<(tempfile::TempDir, std::path::PathBuf), Cl
             .map_err(|e| CliError::Other(format!("failed to write worker/{name}: {e}")))?;
     }
 
+    // Required so that Node.js/tsx treats the temp dir as ESM (worker uses top-level await).
+    std::fs::write(dir.path().join("package.json"), r#"{"type":"module"}"#)
+        .map_err(|e| CliError::Other(format!("failed to write worker package.json: {e}")))?;
+
     let entry = src.join("index.ts");
     Ok((dir, entry))
 }

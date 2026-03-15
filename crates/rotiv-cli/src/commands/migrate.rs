@@ -32,6 +32,10 @@ fn write_embedded_migrate_script() -> Result<(tempfile::TempDir, std::path::Path
             .map_err(|e| CliError::Other(format!("failed to write migrate-script/{name}: {e}")))?;
     }
 
+    // Required so that Node.js/tsx treats the temp dir as ESM.
+    std::fs::write(dir.path().join("package.json"), r#"{"type":"module"}"#)
+        .map_err(|e| CliError::Other(format!("failed to write migrate-script package.json: {e}")))?;
+
     let entry = src.join("index.ts");
     Ok((dir, entry))
 }

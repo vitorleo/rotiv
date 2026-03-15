@@ -74,8 +74,15 @@ pub fn run_migrations(options: MigrationOptions) -> Result<MigrationResult, OrmE
         .map_err(|e| OrmError::SpawnFailed(e.to_string()))?;
 
     if !output.status.success() {
-        let stderr = String::from_utf8_lossy(&output.stderr).to_string();
-        return Err(OrmError::MigrationFailed(stderr));
+        let stderr = String::from_utf8_lossy(&output.stderr).trim().to_string();
+        let stdout = String::from_utf8_lossy(&output.stdout).trim().to_string();
+        let detail = match (stderr.is_empty(), stdout.is_empty()) {
+            (false, false) => format!("{stderr}\n{stdout}"),
+            (false, true) => stderr,
+            (true, false) => stdout,
+            (true, true) => "no output from drizzle-kit".to_string(),
+        };
+        return Err(OrmError::MigrationFailed(detail));
     }
 
     let parsed: MigrateScriptOutput =
