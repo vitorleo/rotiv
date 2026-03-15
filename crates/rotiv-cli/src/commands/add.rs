@@ -179,12 +179,24 @@ fn to_snake(name: &str) -> String {
 /// Convert PascalCase to snake_case plural. "Post" → "posts", "UserProfile" → "user_profiles"
 fn to_snake_plural(name: &str) -> String {
     let snake = to_snake(name);
-    // Simple English pluralization: append 's' (sufficient for model table names)
-    if snake.ends_with('s') || snake.ends_with('x') || snake.ends_with('z') {
-        format!("{}es", snake)
-    } else {
-        format!("{}s", snake)
+    pluralize(&snake)
+}
+
+/// English pluralization for snake_case table names.
+/// Handles the most common irregular cases that arise in model names.
+fn pluralize(word: &str) -> String {
+    // Words ending in a consonant + 'y' → replace 'y' with 'ies'
+    // (e.g. category→categories, query→queries, entry→entries)
+    if word.ends_with('y') && !matches!(word.as_bytes().get(word.len().saturating_sub(2)), Some(b'a' | b'e' | b'i' | b'o' | b'u')) {
+        return format!("{}ies", &word[..word.len() - 1]);
     }
+    // Words ending in s, x, z, sh, ch → append 'es'
+    // (e.g. search→searches, match→matches, status→statuses, box→boxes)
+    if word.ends_with("sh") || word.ends_with("ch") || word.ends_with('s') || word.ends_with('x') || word.ends_with('z') {
+        return format!("{}es", word);
+    }
+    // Default: append 's'
+    format!("{}s", word)
 }
 
 /// Build the absolute project file path for a route file, used by spec_sync.
@@ -432,5 +444,15 @@ mod tests {
         assert_eq!(to_snake_plural("Post"), "posts");
         assert_eq!(to_snake_plural("User"), "users");
         assert_eq!(to_snake_plural("UserProfile"), "user_profiles");
+    }
+
+    #[test]
+    fn to_snake_plural_irregular() {
+        assert_eq!(to_snake_plural("Search"), "searches");   // ch → es
+        assert_eq!(to_snake_plural("Match"), "matches");     // ch → es
+        assert_eq!(to_snake_plural("Category"), "categories"); // y → ies
+        assert_eq!(to_snake_plural("Query"), "queries");     // y → ies
+        assert_eq!(to_snake_plural("Status"), "statuses");   // s → es
+        assert_eq!(to_snake_plural("Box"), "boxes");         // x → es
     }
 }

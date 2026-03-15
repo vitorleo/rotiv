@@ -66,10 +66,13 @@ export async function generateMigrations(projectDir: string): Promise<MigrateRes
     }
   );
 
+  if (result.error) {
+    throw new Error(`drizzle-kit generate could not start: ${result.error.message}`);
+  }
+
   if (result.status !== 0) {
-    throw new Error(
-      `drizzle-kit generate failed:\n${result.stderr ?? result.stdout}`
-    );
+    const detail = [result.stderr, result.stdout].map((s) => s?.trim()).filter(Boolean).join("\n") || "no output";
+    throw new Error(`drizzle-kit generate failed (exit ${result.status}):\n${detail}`);
   }
 
   return {
@@ -102,10 +105,13 @@ export async function applyMigrations(projectDir: string): Promise<MigrateResult
     }
   );
 
+  if (result.error) {
+    throw new Error(`drizzle-kit migrate could not start: ${result.error.message}`);
+  }
+
   if (result.status !== 0) {
-    throw new Error(
-      `drizzle-kit migrate failed:\n${result.stderr ?? result.stdout}`
-    );
+    const detail = [result.stderr, result.stdout].map((s) => s?.trim()).filter(Boolean).join("\n") || "no output";
+    throw new Error(`drizzle-kit migrate failed (exit ${result.status}):\n${detail}`);
   }
 
   return {
