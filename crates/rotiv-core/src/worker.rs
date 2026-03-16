@@ -139,7 +139,7 @@ impl Drop for RouteWorker {
 ///
 /// Bare names (like the fallback `"tsx"`) are returned unchanged — Node resolves those
 /// via its own package resolution.
-fn path_to_file_url_or_bare(path: &str) -> String {
+pub fn path_to_file_url_or_bare(path: &str) -> String {
     // If it's already a URL or a bare name, leave it alone
     if path.contains("://") || !std::path::Path::new(path).is_absolute() {
         return path.to_string();

@@ -17,6 +17,10 @@ pub struct CompileOptions {
     pub minify: bool,
     /// Emit inline source maps (dev builds).
     pub source_maps: bool,
+    /// Explicit path to the build script entry point (written from embedded source by the CLI).
+    pub script_path: Option<PathBuf>,
+    /// The tsx loader specifier to pass to `node --import` (absolute path or bare `"tsx"`).
+    pub tsx_loader: String,
 }
 
 /// Result of a successful compilation.
@@ -40,17 +44,21 @@ struct BuildScriptOutput {
 /// Compile a Rotiv project by invoking the Node.js build script.
 ///
 /// The build script is located via (in priority order):
-///   1. `ROTIV_BUILD_SCRIPT_PATH` environment variable
-///   2. `<binary_dir>/../../packages/@rotiv/build-script/src/index.ts` (dev monorepo layout)
-///   3. `<binary_dir>/build-script/index.ts` (production layout)
+///   1. `options.script_path` — explicit path provided by the CLI (temp dir with embedded source)
+///   2. `ROTIV_BUILD_SCRIPT_PATH` environment variable
+///   3. `<binary_dir>/../../packages/@rotiv/build-script/src/index.ts` (dev monorepo layout)
+///   4. `<binary_dir>/build-script/index.ts` (production layout)
 pub fn compile_project(options: CompileOptions) -> Result<CompileResult, CompilerError> {
-    let script_path = resolve_build_script_path()?;
+    let script_path = match options.script_path {
+        Some(p) if p.exists() => p,
+        _ => resolve_build_script_path()?,
+    };
 
     let started = Instant::now();
 
     let mut cmd = std::process::Command::new("node");
     cmd.arg("--import")
-        .arg("tsx")
+        .arg(&options.tsx_loader)
         .arg(&script_path)
         .arg("--project")
         .arg(&options.project_dir)
@@ -164,6 +172,8 @@ mod tests {
             out_dir: PathBuf::from("/tmp/my-project/dist"),
             minify: false,
             source_maps: true,
+            script_path: None,
+            tsx_loader: "tsx".to_string(),
         };
         assert!(!opts.minify);
         assert!(opts.source_maps);
