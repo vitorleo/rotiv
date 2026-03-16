@@ -54,7 +54,8 @@ impl RouteWorker {
         let node_modules = worker_package_dir.join("node_modules");
 
         // Resolve tsx loader — prefer project node_modules, fall back to binary-adjacent copy.
-        let tsx_loader = resolve_tsx_loader(&self.project_dir);
+        // Convert to file:// URL because node --import requires a URL on Windows.
+        let tsx_loader = path_to_file_url_or_bare(&resolve_tsx_loader(&self.project_dir));
 
         let child = tokio::process::Command::new("node")
             .arg("--import")
@@ -127,6 +128,29 @@ impl Drop for RouteWorker {
         if let Some(mut child) = self.process.take() {
             let _ = child.start_kill();
         }
+    }
+}
+
+/// Convert an absolute path to a `file://` URL for `node --import`.
+///
+/// Node.js ESM loader requires a URL for `--import`. On Windows, a raw path like
+/// `C:\foo\bar` is misinterpreted as a URL with scheme `c:`, causing
+/// `ERR_UNSUPPORTED_ESM_URL_SCHEME`. Converting to `file:///C:/foo/bar` fixes this.
+///
+/// Bare names (like the fallback `"tsx"`) are returned unchanged — Node resolves those
+/// via its own package resolution.
+fn path_to_file_url_or_bare(path: &str) -> String {
+    // If it's already a URL or a bare name, leave it alone
+    if path.contains("://") || !std::path::Path::new(path).is_absolute() {
+        return path.to_string();
+    }
+    let normalized = path.replace('\\', "/");
+    if normalized.starts_with('/') {
+        // Unix: /usr/local/... → file:///usr/local/...
+        format!("file://{}", normalized)
+    } else {
+        // Windows drive: C:/Users/... → file:///C:/Users/...
+        format!("file:///{}", normalized)
     }
 }
 

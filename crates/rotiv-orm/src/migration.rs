@@ -45,6 +45,25 @@ struct MigrateScriptOutput {
     pending: Option<u32>,
 }
 
+/// Convert an absolute path to a `file://` URL for `node --import`.
+///
+/// Node.js ESM loader requires a URL for `--import`. On Windows, a raw path like
+/// `C:\foo\bar` is misinterpreted as a URL with scheme `c:`, causing
+/// `ERR_UNSUPPORTED_ESM_URL_SCHEME`. Converting to `file:///C:/foo/bar` fixes this.
+///
+/// Bare names (like the fallback `"tsx"`) are returned unchanged.
+fn path_to_file_url_or_bare(path: &str) -> String {
+    if path.contains("://") || !std::path::Path::new(path).is_absolute() {
+        return path.to_string();
+    }
+    let normalized = path.replace('\\', "/");
+    if normalized.starts_with('/') {
+        format!("file://{}", normalized)
+    } else {
+        format!("file:///{}", normalized)
+    }
+}
+
 /// Resolve the `tsx` ESM loader for `node --import`.
 /// Returns an absolute path whenever possible so Node's project-relative resolution is bypassed.
 fn resolve_tsx_loader(project_dir: &Path) -> String {
@@ -124,7 +143,7 @@ pub fn run_migrations(options: MigrationOptions) -> Result<MigrationResult, OrmE
         "--migrate"
     };
 
-    let tsx_loader = resolve_tsx_loader(&options.project_dir);
+    let tsx_loader = path_to_file_url_or_bare(&resolve_tsx_loader(&options.project_dir));
 
     let output = std::process::Command::new("node")
         .arg("--import")
