@@ -46,28 +46,59 @@ struct MigrateScriptOutput {
 }
 
 /// Resolve the `tsx` ESM loader for `node --import`.
-/// Searches project node_modules, then binary-adjacent node_modules, then falls back to bare "tsx".
+/// Returns an absolute path whenever possible so Node's project-relative resolution is bypassed.
 fn resolve_tsx_loader(project_dir: &Path) -> String {
     let tsx_subpath: std::path::PathBuf = ["tsx", "dist", "esm", "index.cjs"].iter().collect();
 
     // 1. Project node_modules
-    let project_tsx = project_dir.join("node_modules").join(&tsx_subpath);
-    if project_tsx.exists() {
-        return project_tsx.display().to_string();
+    let p = project_dir.join("node_modules").join(&tsx_subpath);
+    if p.exists() {
+        return p.display().to_string();
     }
 
     // 2. Binary-adjacent node_modules
     if let Ok(exe) = std::env::current_exe() {
         if let Some(bin_dir) = exe.parent() {
-            let adj = bin_dir.join("node_modules").join(&tsx_subpath);
-            if adj.exists() {
-                return adj.display().to_string();
-            }
-            if let Some(parent) = bin_dir.parent() {
-                let up = parent.join("node_modules").join(&tsx_subpath);
-                if up.exists() {
-                    return up.display().to_string();
+            for dir in [bin_dir.to_path_buf(), bin_dir.join("..")] {
+                let p = dir.join("node_modules").join(&tsx_subpath);
+                if p.exists() {
+                    return p.display().to_string();
                 }
+            }
+        }
+    }
+
+    // 3. Global npm root: `npm root -g`
+    if let Ok(output) = std::process::Command::new("npm").args(["root", "-g"]).output() {
+        if output.status.success() {
+            let npm_root = String::from_utf8_lossy(&output.stdout).trim().to_string();
+            let p = PathBuf::from(&npm_root).join(&tsx_subpath);
+            if p.exists() {
+                return p.display().to_string();
+            }
+        }
+    }
+
+    // 4. Derive from tsx binary on PATH (`which tsx` / `where tsx`)
+    let which_cmd = if cfg!(windows) { "where" } else { "which" };
+    if let Ok(output) = std::process::Command::new(which_cmd).arg("tsx").output() {
+        if output.status.success() {
+            let first_line = String::from_utf8_lossy(&output.stdout);
+            let tsx_bin = first_line.lines().next().unwrap_or("").trim().to_string();
+            let mut dir = PathBuf::from(&tsx_bin);
+            while let Some(parent) = dir.parent().map(|p| p.to_path_buf()) {
+                let p = parent.join("node_modules").join(&tsx_subpath);
+                if p.exists() {
+                    return p.display().to_string();
+                }
+                let p2 = parent.join(&tsx_subpath);
+                if p2.exists() {
+                    return p2.display().to_string();
+                }
+                if parent == dir {
+                    break;
+                }
+                dir = parent;
             }
         }
     }

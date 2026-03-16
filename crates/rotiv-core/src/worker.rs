@@ -132,37 +132,74 @@ impl Drop for RouteWorker {
 
 /// Resolve the `tsx` ESM loader specifier for use with `node --import`.
 ///
+/// Returns an absolute path to `tsx/dist/esm/index.cjs` whenever possible,
+/// so that Node's module resolution (which starts from the project dir) is bypassed.
+///
 /// Resolution order:
-/// 1. `project_dir/node_modules/tsx/dist/esm/index.cjs` (user has tsx installed)
-/// 2. Binary-adjacent `node_modules/tsx/dist/esm/index.cjs` (bundled with rotiv install)
-/// 3. Fall back to bare `"tsx"` (relies on NODE_PATH or global install)
+/// 1. `project_dir/node_modules/tsx/dist/esm/index.cjs`
+/// 2. Binary-adjacent `node_modules/tsx/dist/esm/index.cjs`
+/// 3. `npm root -g` → global npm package dir
+/// 4. `which tsx` / `where tsx` → derive package root from the tsx binary on PATH
 pub fn resolve_tsx_loader(project_dir: &std::path::Path) -> String {
-    let tsx_subpath = ["tsx", "dist", "esm", "index.cjs"].iter().collect::<std::path::PathBuf>();
+    let tsx_subpath: std::path::PathBuf = ["tsx", "dist", "esm", "index.cjs"].iter().collect();
 
-    // 1. Project node_modules
-    let project_tsx = project_dir.join("node_modules").join(&tsx_subpath);
-    if project_tsx.exists() {
-        return project_tsx.display().to_string();
+    // 1. Project node_modules (works when pnpm install succeeded)
+    let p = project_dir.join("node_modules").join(&tsx_subpath);
+    if p.exists() {
+        return p.display().to_string();
     }
 
-    // 2. Binary-adjacent node_modules (installed alongside rotiv binary)
+    // 2. Binary-adjacent node_modules
     if let Ok(exe) = std::env::current_exe() {
         if let Some(bin_dir) = exe.parent() {
-            let adj_tsx = bin_dir.join("node_modules").join(&tsx_subpath);
-            if adj_tsx.exists() {
-                return adj_tsx.display().to_string();
-            }
-            // Also check one level up (e.g. .cargo/bin/../node_modules)
-            if let Some(parent) = bin_dir.parent() {
-                let up_tsx = parent.join("node_modules").join(&tsx_subpath);
-                if up_tsx.exists() {
-                    return up_tsx.display().to_string();
+            for dir in [bin_dir.to_path_buf(), bin_dir.join("..")] {
+                let p = dir.join("node_modules").join(&tsx_subpath);
+                if p.exists() {
+                    return p.display().to_string();
                 }
             }
         }
     }
 
-    // 3. Bare fallback — works if tsx is globally installed or in PATH
+    // 3. Global npm root: `npm root -g`
+    if let Ok(output) = std::process::Command::new("npm").args(["root", "-g"]).output() {
+        if output.status.success() {
+            let npm_root = String::from_utf8_lossy(&output.stdout).trim().to_string();
+            let p = std::path::PathBuf::from(&npm_root).join(&tsx_subpath);
+            if p.exists() {
+                return p.display().to_string();
+            }
+        }
+    }
+
+    // 4. Derive from tsx binary location on PATH (`which tsx` / `where tsx`)
+    let which_cmd = if cfg!(windows) { "where" } else { "which" };
+    if let Ok(output) = std::process::Command::new(which_cmd).arg("tsx").output() {
+        if output.status.success() {
+            let tsx_bin = String::from_utf8_lossy(&output.stdout).trim().to_string();
+            // tsx binary is at <root>/node_modules/.bin/tsx or <root>/bin/tsx
+            // Walk up to find node_modules/tsx/dist/esm/index.cjs
+            let tsx_bin_path = std::path::PathBuf::from(tsx_bin.lines().next().unwrap_or(""));
+            let mut dir = tsx_bin_path.as_path();
+            while let Some(parent) = dir.parent() {
+                let p = parent.join("node_modules").join(&tsx_subpath);
+                if p.exists() {
+                    return p.display().to_string();
+                }
+                // Also check if parent IS a node_modules root
+                let p2 = parent.join(&tsx_subpath);
+                if p2.exists() {
+                    return p2.display().to_string();
+                }
+                dir = parent;
+                if parent == dir {
+                    break;
+                }
+            }
+        }
+    }
+
+    // Final fallback: bare "tsx" — only works if tsx is in project node_modules
     "tsx".to_string()
 }
 

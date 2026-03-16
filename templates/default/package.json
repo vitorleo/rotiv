@@ -2,21 +2,26 @@
   "name": "{{project_name}}",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "scripts": {
     "dev": "rotiv dev",
     "build": "rotiv build",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@rotiv/jsx-runtime": "^0.2.0",
-    "@rotiv/orm": "^0.2.0",
-    "@rotiv/sdk": "^0.2.0",
-    "@rotiv/signals": "^0.2.0"
+    "drizzle-orm": "^0.44.0",
+    "better-sqlite3": "^9.0.0"
   },
   "devDependencies": {
-    "@rotiv/types": "^0.2.0",
     "drizzle-kit": "^0.30.0",
     "tsx": "^4.0.0",
     "typescript": "^5.0.0"
+  },
+  "optionalDependencies": {
+    "@rotiv/jsx-runtime": "^0.2.0",
+    "@rotiv/orm": "^0.2.0",
+    "@rotiv/sdk": "^0.2.0",
+    "@rotiv/signals": "^0.2.0",
+    "@rotiv/types": "^0.2.0"
   }
 }

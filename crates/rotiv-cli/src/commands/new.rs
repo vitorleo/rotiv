@@ -14,6 +14,7 @@ const MODEL_USER_TS: &str = include_str!("../../../../templates/default/app/mode
 const PACKAGE_JSON: &str = include_str!("../../../../templates/default/package.json");
 const TSCONFIG_JSON: &str = include_str!("../../../../templates/default/tsconfig.json");
 const README_MD: &str = include_str!("../../../../templates/default/README.md");
+const NPMRC: &str = include_str!("../../../../templates/default/.npmrc");
 
 #[derive(Serialize)]
 struct NewSuccess {
@@ -71,6 +72,7 @@ pub fn run(name: &str, mode: OutputMode) -> Result<(), CliError> {
     write_template(&dest.join("package.json"), PACKAGE_JSON, name, &created_at)?;
     write_template(&dest.join("tsconfig.json"), TSCONFIG_JSON, name, &created_at)?;
     write_template(&dest.join("README.md"), README_MD, name, &created_at)?;
+    write_template(&dest.join(".npmrc"), NPMRC, name, &created_at)?;
 
     let abs_path = std::fs::canonicalize(&dest)
         .unwrap_or(dest.clone())
@@ -91,8 +93,9 @@ pub fn run(name: &str, mode: OutputMode) -> Result<(), CliError> {
             println!();
             println!("  Next steps:");
             println!("    cd {}", name);
-            println!("    pnpm install");
-            println!("    rotiv dev");
+            println!("    pnpm install      # installs tsx, drizzle-kit, drizzle-orm");
+            println!("    rotiv migrate     # creates the database from your schema");
+            println!("    rotiv dev         # starts the dev server at http://localhost:3000");
         }
     }
 
